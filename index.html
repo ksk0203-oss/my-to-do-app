@@ -474,8 +474,10 @@
   }
   .item-date-tag{cursor:pointer;transition:color .15s,background .15s;}
   .item-date-tag:hover{color:var(--accent);background:var(--accent-light);}
-  .item-time-tag{cursor:pointer;transition:color .15s,background .15s;}
+  .item-time-tag{cursor:pointer;transition:color .15s,background .15s,opacity .15s;}
   .item-time-tag:hover{color:var(--accent);background:var(--accent-light);}
+  .item-time-tag.unset{opacity:.4;}
+  .item-time-tag.unset:hover{opacity:1;}
   .item-date-input, .item-time-input{
     position:absolute;
     width:1px;height:1px;
@@ -550,19 +552,33 @@
     padding:50px 0;
   }
 
-  /* Completed archive */
-  .archive-toggle{
+  /* Completed archive + shared collapsible card-header (also used by mobile 루틴 card) */
+  .archive-toggle, .mobile-card-header{
     margin-top:22px;
-    font-size:13px;
-    font-weight:600;
-    color:var(--text-sub);
     cursor:pointer;
     display:flex;
     align-items:center;
-    gap:6px;
+    gap:8px;
     padding:4px 2px;
   }
-  .archive-toggle:hover{color:var(--accent);}
+  .archive-toggle:hover .card-header-title, .mobile-card-header:hover .card-header-title{color:var(--accent);}
+  .card-header-title{
+    font-size:15px;
+    font-weight:700;
+    color:var(--text);
+  }
+  .card-header-count{
+    font-size:13px;
+    color:var(--text-sub);
+  }
+  .card-header-arrow{
+    margin-left:auto;
+    color:var(--text-sub);
+    font-size:13px;
+    line-height:1;
+    transition:transform .15s ease;
+  }
+  .card-header-arrow.closed{transform:rotate(-90deg);}
   .archive-list{
     margin-top:8px;
     display:none;
@@ -1533,15 +1549,15 @@
     .detail-subtask-add input{font-size:15px;}
 
     /* 첫화면(모바일 오늘 필터)에서 오늘/루틴/완료를 순서대로 섹션으로 표시 */
-    .mobile-section-label{
-      font-size:13px;
-      font-weight:700;
-      color:var(--text-sub);
-      margin:18px 2px 8px;
+    .mobile-home-title{
+      font-size:24px;
+      font-weight:800;
+      color:var(--text);
+      letter-spacing:-.3px;
+      margin:4px 2px 14px;
     }
-    .mobile-section-label:first-of-type{margin-top:0;}
     .mobile-today-routines{margin-top:4px;}
-    .mobile-today-routines .list{border-left:3px solid var(--text-sub);}
+    .mobile-today-routines .list{border-left:3px solid var(--text-sub);margin-top:8px;}
   }
 
   /* Global search overlay */
@@ -1781,18 +1797,23 @@
     <button id="add-btn">추가</button>
   </div>
 
-  <div class="mobile-section-label" id="mobile-section-label-today" style="display:none;">오늘</div>
+  <div class="mobile-home-title" id="mobile-section-label-today" style="display:none;">오늘</div>
   <div class="list" id="list"></div>
   <div class="empty" id="empty-msg" style="display:none;"></div>
 
   <div class="mobile-today-routines" id="mobile-today-routines" style="display:none;">
-    <div class="mobile-section-label">루틴</div>
+    <div class="mobile-card-header" id="mobile-routines-header">
+      <span class="card-header-title">루틴</span>
+      <span class="card-header-count" id="mobile-routines-count">0</span>
+      <span class="card-header-arrow" id="mobile-routines-arrow">⌄</span>
+    </div>
     <div class="list" id="mobile-routines-list"></div>
   </div>
 
-  <div class="mobile-section-label" id="mobile-section-label-done" style="display:none;">완료</div>
   <div class="archive-toggle" id="archive-toggle" style="display:none;">
-    <span id="archive-arrow">▸</span> <span id="archive-label">완료된 항목</span>
+    <span class="card-header-title" id="archive-label">완료</span>
+    <span class="card-header-count" id="archive-count">0</span>
+    <span class="card-header-arrow" id="archive-arrow">⌄</span>
   </div>
   <div class="archive-list" id="archive-list"></div>
 
@@ -2071,10 +2092,20 @@ function deferOverdueTasks(){
 let data = loadData();
 let currentView = 'tasks'; // 'tasks' | 'routines' | 'calendar'
 let archiveOpen = false;
+let routinesOpen = true; // 모바일 첫화면 '루틴' 카드 펼침 상태
 let calMode = 'month'; // 'year' | 'month' | 'week' | 'day'
 let calDate = new Date();
 let searchQuery = '';
 let taskViewMode = 'today'; // 'inbox' | 'today' | 'tomorrow' | 'next7' — desktop/mobile both land on 오늘 by default
+
+function isMobileViewport(){
+  return window.matchMedia('(max-width:768px)').matches;
+}
+let resizeRenderTimer = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(resizeRenderTimer);
+  resizeRenderTimer = setTimeout(render, 150);
+});
 
 const listEl = document.getElementById('list');
 const emptyEl = document.getElementById('empty-msg');
@@ -3212,6 +3243,11 @@ archiveToggle.addEventListener('click', ()=>{
   render();
 });
 
+document.getElementById('mobile-routines-header').addEventListener('click', ()=>{
+  routinesOpen = !routinesOpen;
+  render();
+});
+
 function render(){
   if(detailId && !getDetailItem()) closeDetail();
   document.getElementById('count-tasks').textContent = data.tasks.length;
@@ -3232,7 +3268,6 @@ function render(){
 
   /* 모바일 첫화면(오늘/루틴/완료) 섹션은 기본적으로 숨기고, tasks 뷰의 '오늘' 필터일 때만 표시 */
   document.getElementById('mobile-section-label-today').style.display = 'none';
-  document.getElementById('mobile-section-label-done').style.display = 'none';
   document.getElementById('mobile-today-routines').style.display = 'none';
 
   if(currentView === 'tasks'){
@@ -3246,8 +3281,9 @@ function render(){
     const visibleCompleted = searchQuery ? data.completedTasks.filter(t=>t.text.toLowerCase().includes(searchQuery)) : data.completedTasks;
 
     archiveToggle.style.display = visibleCompleted.length ? 'flex' : 'none';
-    archiveLabel.textContent = `완료된 항목 (${visibleCompleted.length})`;
-    archiveArrow.textContent = archiveOpen ? '▾' : '▸';
+    archiveLabel.textContent = '완료';
+    document.getElementById('archive-count').textContent = visibleCompleted.length;
+    archiveArrow.classList.toggle('closed', !archiveOpen);
     archiveListEl.classList.toggle('open', archiveOpen);
 
     const emptyMessages = {
@@ -3266,6 +3302,7 @@ function render(){
         el.className = 'item' + (t.priority ? ' priority-'+t.priority : '');
         el.dataset.id = t.id;
         const prog = subtaskProgress(t);
+        const hasTime = !!formatTimeRange(t.startTime, t.endTime);
         el.innerHTML = `
           <div class="checkbox"></div>
           <div class="item-text">${escapeHtml(t.text)}</div>
@@ -3273,7 +3310,7 @@ function render(){
           ${prog ? `<div class="item-progress" title="체크리스트 ${prog.done}/${prog.total}"><div class="item-progress-bar"><div class="item-progress-bar-fill" style="width:${prog.percent}%"></div></div>${prog.percent}%</div>` : ''}
           <label class="item-tag item-date-tag" for="date-${t.id}" title="날짜를 눌러 다른 날로 이동">${shortDateLabel(t.dueDate)}</label>
           <input type="date" id="date-${t.id}" class="item-date-input" value="${t.dueDate}">
-          <div class="item-tag item-time-tag" title="시간 설정">${formatTimeRange(t.startTime,t.endTime) ? '🕐 '+formatTimeRange(t.startTime,t.endTime) : '🕐'}</div>
+          <div class="item-tag item-time-tag${hasTime?'':' unset'}" title="시간 설정">${hasTime ? '🕐 '+formatTimeRange(t.startTime,t.endTime) : '🕐'}</div>
           <div class="item-move" title="다른 목록으로 보내기">⇄</div>
           <div class="item-del">✕</div>
         `;
@@ -3320,49 +3357,53 @@ function render(){
       archiveListEl.appendChild(el);
     });
 
-    /* 모바일 첫화면: 오늘 필터일 때 오늘/루틴/완료 섹션을 순서대로 노출 */
-    const mobileLabelToday = document.getElementById('mobile-section-label-today');
-    const mobileLabelDone = document.getElementById('mobile-section-label-done');
+    /* 모바일 첫화면: 오늘 필터일 때 오늘/루틴/완료 섹션을 순서대로, 내용이 있을 때만 노출 */
+    const mobileHomeTitle = document.getElementById('mobile-section-label-today');
     const mobileRoutinesBox = document.getElementById('mobile-today-routines');
     const mobileRoutinesListEl = document.getElementById('mobile-routines-list');
-    const showMobileHome = taskViewMode === 'today' && !searchQuery;
-    mobileLabelToday.style.display = showMobileHome ? 'block' : 'none';
-    mobileLabelDone.style.display = showMobileHome ? 'block' : 'none';
-    mobileRoutinesBox.style.display = showMobileHome ? 'block' : 'none';
+    const mobileRoutinesArrow = document.getElementById('mobile-routines-arrow');
+    const showMobileHome = isMobileViewport() && taskViewMode === 'today' && !searchQuery;
 
-    if(showMobileHome){
+    const todayWeekday = new Date().getDay();
+    const todaysRoutines = showMobileHome ? data.routines.filter(r=>{
+      const days = r.days || [];
+      return days.length === 0 || days.includes(todayWeekday);
+    }) : [];
+
+    const showTodaySection = showMobileHome && visibleTasks.length > 0;
+    mobileHomeTitle.style.display = showTodaySection ? 'block' : 'none';
+    if(showMobileHome && visibleTasks.length === 0) emptyEl.style.display = 'none';
+
+    const showRoutinesSection = showMobileHome && todaysRoutines.length > 0;
+    mobileRoutinesBox.style.display = showRoutinesSection ? 'block' : 'none';
+    if(showRoutinesSection){
       const today = todayStr();
-      const todayWeekday = new Date().getDay();
-      const todaysRoutines = data.routines.filter(r=>{
-        const days = r.days || [];
-        return days.length === 0 || days.includes(todayWeekday);
-      });
+      document.getElementById('mobile-routines-count').textContent = todaysRoutines.length;
+      mobileRoutinesArrow.classList.toggle('closed', !routinesOpen);
+      mobileRoutinesListEl.style.display = routinesOpen ? 'flex' : 'none';
       mobileRoutinesListEl.innerHTML = '';
-      if(todaysRoutines.length === 0){
-        mobileRoutinesListEl.innerHTML = `<div class="empty" style="display:block;">오늘 예정된 루틴이 없어요.</div>`;
-      }else{
-        todaysRoutines.forEach(r=>{
-          const done = (r.completedDates||[]).includes(today);
-          const el = document.createElement('div');
-          el.className = 'item' + (done ? ' checked' : '') + (r.priority ? ' priority-'+r.priority : '');
-          el.dataset.id = r.id;
-          const prog = subtaskProgress(r);
-          el.innerHTML = `
-            <div class="checkbox ${done?'checked':''}"></div>
-            <div class="item-text">${escapeHtml(r.text)}</div>
-            ${r.note && r.note.trim() ? '<span class="note-dot" title="메모 있음">📝</span>' : ''}
-            ${prog ? `<div class="item-progress" title="체크리스트 ${prog.done}/${prog.total}"><div class="item-progress-bar"><div class="item-progress-bar-fill" style="width:${prog.percent}%"></div></div>${prog.percent}%</div>` : ''}
-            <div class="item-tag item-time-tag" title="시간 설정">${formatTimeRange(r.startTime,r.endTime) ? '🕐 '+formatTimeRange(r.startTime,r.endTime) : '🕐'}</div>
-          `;
-          el.querySelector('.checkbox').addEventListener('click', ()=>toggleRoutine(r.id));
-          el.querySelector('.item-text').addEventListener('click', ()=>openDetail(r.id, 'routines'));
-          el.querySelector('.item-time-tag').addEventListener('click', (e)=>{
-            e.stopPropagation();
-            openTimePicker(r, 'startTime', '시작 시간');
-          });
-          mobileRoutinesListEl.appendChild(el);
+      todaysRoutines.forEach(r=>{
+        const done = (r.completedDates||[]).includes(today);
+        const hasTime = !!formatTimeRange(r.startTime, r.endTime);
+        const el = document.createElement('div');
+        el.className = 'item' + (done ? ' checked' : '') + (r.priority ? ' priority-'+r.priority : '');
+        el.dataset.id = r.id;
+        const prog = subtaskProgress(r);
+        el.innerHTML = `
+          <div class="checkbox ${done?'checked':''}"></div>
+          <div class="item-text">${escapeHtml(r.text)}</div>
+          ${r.note && r.note.trim() ? '<span class="note-dot" title="메모 있음">📝</span>' : ''}
+          ${prog ? `<div class="item-progress" title="체크리스트 ${prog.done}/${prog.total}"><div class="item-progress-bar"><div class="item-progress-bar-fill" style="width:${prog.percent}%"></div></div>${prog.percent}%</div>` : ''}
+          <div class="item-tag item-time-tag${hasTime?'':' unset'}" title="시간 설정">${hasTime ? '🕐 '+formatTimeRange(r.startTime,r.endTime) : '🕐'}</div>
+        `;
+        el.querySelector('.checkbox').addEventListener('click', ()=>toggleRoutine(r.id));
+        el.querySelector('.item-text').addEventListener('click', ()=>openDetail(r.id, 'routines'));
+        el.querySelector('.item-time-tag').addEventListener('click', (e)=>{
+          e.stopPropagation();
+          openTimePicker(r, 'startTime', '시작 시간');
         });
-      }
+        mobileRoutinesListEl.appendChild(el);
+      });
     }
 
   }else if(currentView === 'routines'){
@@ -3382,13 +3423,14 @@ function render(){
         el.className = 'item' + (done ? ' checked' : '') + (r.priority ? ' priority-'+r.priority : '');
         el.dataset.id = r.id;
         const prog = subtaskProgress(r);
+        const hasTime = !!formatTimeRange(r.startTime, r.endTime);
         el.innerHTML = `
           <div class="checkbox ${done?'checked':''}"></div>
           <div class="item-text">${escapeHtml(r.text)}</div>
           ${r.note && r.note.trim() ? '<span class="note-dot" title="메모 있음">📝</span>' : ''}
           ${prog ? `<div class="item-progress" title="체크리스트 ${prog.done}/${prog.total}"><div class="item-progress-bar"><div class="item-progress-bar-fill" style="width:${prog.percent}%"></div></div>${prog.percent}%</div>` : ''}
           <div class="item-tag">${routineScheduleLabel(r)}</div>
-          <div class="item-tag item-time-tag" title="시간 설정">${formatTimeRange(r.startTime,r.endTime) ? '🕐 '+formatTimeRange(r.startTime,r.endTime) : '🕐'}</div>
+          <div class="item-tag item-time-tag${hasTime?'':' unset'}" title="시간 설정">${hasTime ? '🕐 '+formatTimeRange(r.startTime,r.endTime) : '🕐'}</div>
           <div class="item-move" title="다른 목록으로 보내기">⇄</div>
           <div class="item-del">✕</div>
         `;
