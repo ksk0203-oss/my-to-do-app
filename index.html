@@ -55,7 +55,46 @@
     flex-direction:column;
     padding:20px 12px;
     flex-shrink:0;
+    overflow-y:auto;
   }
+  .sidebar-quicknav{
+    display:flex;
+    flex-direction:column;
+    gap:1px;
+    margin-bottom:10px;
+    padding-bottom:10px;
+    border-bottom:1px solid var(--border);
+  }
+  .sidebar-quicknav-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 10px;
+    border-radius:9px;
+    cursor:pointer;
+    font-size:13.5px;
+    color:var(--text);
+    transition:background .15s,color .15s;
+  }
+  .sidebar-quicknav-item:hover{background:var(--hover-overlay);}
+  .sidebar-quicknav-item.active{background:var(--accent-light);color:var(--accent);font-weight:700;}
+  .sidebar-quicknav-icon{width:18px;text-align:center;font-size:13px;flex-shrink:0;}
+  .sidebar-quicknav-label{flex:1;}
+  .sidebar-quicknav-count{font-size:11.5px;color:var(--text-sub);}
+  .sidebar-quicknav-item.active .sidebar-quicknav-count{color:var(--accent);}
+  .sidebar-search-btn{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 10px;
+    border-radius:9px;
+    cursor:pointer;
+    font-size:13.5px;
+    color:var(--text-sub);
+    margin-bottom:6px;
+    transition:background .15s,color .15s;
+  }
+  .sidebar-search-btn:hover{background:var(--hover-overlay);color:var(--text);}
   .brand{
     font-size:18.5px;
     font-weight:700;
@@ -351,20 +390,27 @@
   .list{
     display:flex;
     flex-direction:column;
-    gap:6px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-left:3px solid var(--accent);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow-sm);
+    overflow:hidden;
   }
   .item{
     display:flex;
     align-items:center;
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    padding:13px 14px;
+    background:transparent;
+    border:none;
+    border-bottom:1px solid var(--border);
+    border-radius:0;
+    padding:14px 14px;
     gap:12px;
-    box-shadow:var(--shadow-sm);
-    transition:opacity .35s, transform .35s, box-shadow .15s, border-color .15s;
+    box-shadow:none;
+    transition:opacity .35s, transform .35s, background .15s;
   }
-  .item:hover{box-shadow:var(--shadow-md);border-color:var(--checkbox-border);}
+  .item:last-child{border-bottom:none;}
+  .item:hover{background:var(--hover-overlay);}
   .item.leaving{
     opacity:0;
     transform:translateX(12px);
@@ -493,33 +539,43 @@
 
   /* Completed archive */
   .archive-toggle{
-    margin-top:26px;
+    margin-top:22px;
     font-size:13px;
+    font-weight:600;
     color:var(--text-sub);
     cursor:pointer;
     display:flex;
     align-items:center;
     gap:6px;
+    padding:4px 2px;
   }
   .archive-toggle:hover{color:var(--accent);}
   .archive-list{
-    margin-top:10px;
+    margin-top:8px;
     display:none;
     flex-direction:column;
-    gap:6px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-left:3px solid var(--checkbox-border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow-sm);
+    overflow:hidden;
   }
   .archive-list.open{display:flex;}
   .archive-item{
     display:flex;
     align-items:center;
     gap:12px;
-    padding:10px 14px;
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
+    padding:12px 14px;
+    background:transparent;
+    border:none;
+    border-bottom:1px solid var(--border);
+    border-radius:0;
     font-size:13.5px;
     color:var(--text-sub);
   }
+  .archive-item:last-child{border-bottom:none;}
+  .archive-item:hover{background:var(--hover-overlay);}
   .archive-item .item-text{text-decoration:line-through;color:var(--text-sub);flex:1;}
   .archive-item .restore{
     font-size:12px;
@@ -1144,12 +1200,442 @@
     background:var(--accent);
   }
   .cal-mini-day.today{background:var(--accent);color:#fff;}
+
+  /* Pomodoro */
+  .pomodoro-view{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px 0 60px;
+  }
+  .pomo-card{
+    width:100%;
+    max-width:360px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:20px;
+    box-shadow:var(--shadow-md);
+    padding:32px 28px 28px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:22px;
+  }
+  .pomo-mode-badge{
+    font-size:12.5px;
+    font-weight:700;
+    letter-spacing:.02em;
+    padding:6px 16px;
+    border-radius:20px;
+    background:var(--accent-light);
+    color:var(--accent);
+    transition:background .25s,color .25s;
+  }
+  .pomo-mode-badge.mode-short{background:rgba(63,166,107,.14);color:#3FA66B;}
+  .pomo-mode-badge.mode-long{background:rgba(74,143,224,.14);color:#4A8FE0;}
+  .pomo-ring-wrap{
+    position:relative;
+    width:240px;
+    height:240px;
+  }
+  .pomo-ring{width:240px;height:240px;transform:rotate(-90deg);}
+  .pomo-ring-bg{
+    fill:none;
+    stroke:var(--hover-overlay);
+    stroke-width:14;
+  }
+  .pomo-ring-progress{
+    fill:none;
+    stroke:var(--accent);
+    stroke-width:14;
+    stroke-linecap:round;
+    transition:stroke-dashoffset .3s linear, stroke .25s;
+  }
+  .pomo-ring-progress.mode-short{stroke:#3FA66B;}
+  .pomo-ring-progress.mode-long{stroke:#4A8FE0;}
+  .pomo-time-wrap{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    pointer-events:none;
+  }
+  .pomo-time{
+    font-size:44px;
+    font-weight:800;
+    letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums;
+    color:var(--text);
+  }
+  .pomo-cycles{
+    display:flex;
+    gap:6px;
+  }
+  .pomo-cycle-dot{
+    width:8px;height:8px;
+    border-radius:50%;
+    background:var(--checkbox-border);
+    transition:background .2s,transform .2s;
+  }
+  .pomo-cycle-dot.done{background:var(--accent);}
+  .pomo-cycle-dot.current{transform:scale(1.35);border:2px solid var(--accent);background:transparent;}
+  .pomo-controls{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:16px;
+  }
+  .pomo-btn{
+    border:none;
+    cursor:pointer;
+    transition:transform .12s,box-shadow .15s,background .15s,color .15s;
+  }
+  .pomo-btn-side{
+    width:44px;height:44px;
+    border-radius:50%;
+    background:var(--hover-overlay);
+    color:var(--text-sub);
+    font-size:16px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .pomo-btn-side:hover{background:var(--border);color:var(--text);}
+  .pomo-btn-main{
+    width:76px;height:76px;
+    border-radius:50%;
+    background:var(--accent);
+    color:#fff;
+    font-size:14.5px;
+    font-weight:700;
+    box-shadow:0 8px 20px rgba(239,91,63,.35);
+  }
+  body[data-theme="dark"] .pomo-btn-main{box-shadow:0 8px 20px rgba(255,122,92,.3);}
+  .pomo-btn-main:hover{transform:scale(1.04);}
+  .pomo-btn-main:active{transform:scale(.97);}
+  .pomo-settings-toggle{
+    font-size:12px;
+    color:var(--text-sub);
+    cursor:pointer;
+    text-align:center;
+  }
+  .pomo-settings-toggle:hover{color:var(--accent);}
+  .pomo-settings-panel{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding-top:6px;
+    border-top:1px solid var(--border);
+  }
+  .pomo-setting-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:13px;
+    color:var(--text-sub);
+  }
+  .pomo-setting-row input{
+    width:56px;
+    text-align:center;
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--text);
+    border-radius:7px;
+    padding:5px 0;
+    font-size:13px;
+    outline:none;
+    margin-left:auto;
+    margin-right:6px;
+  }
+  .pomo-setting-row input:focus{border-color:var(--accent);}
+
+  /* Mobile layout */
+  .mobile-topbar{
+    display:none;
+    align-items:center;
+    gap:12px;
+    padding:12px 16px;
+    background:var(--card);
+    border-bottom:1px solid var(--border);
+    position:sticky;
+    top:0;
+    z-index:20;
+  }
+  .mobile-hamburger{
+    border:none;
+    background:var(--hover-overlay);
+    width:38px;height:38px;
+    border-radius:10px;
+    font-size:18px;
+    color:var(--text);
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .mobile-topbar-title{
+    font-size:17px;
+    font-weight:700;
+    flex:1;
+    text-align:center;
+  }
+  .mobile-topbar-spacer{width:38px;flex-shrink:0;}
+
+  .mobile-drawer-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    z-index:40;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s;
+  }
+  .mobile-drawer-overlay.open{opacity:1;pointer-events:auto;}
+  .mobile-drawer{
+    display:none;
+    position:fixed;
+    top:0;left:0;bottom:0;
+    width:78%;
+    max-width:300px;
+    background:var(--card);
+    z-index:41;
+    padding:24px 14px;
+    transform:translateX(-100%);
+    transition:transform .25s ease;
+    box-shadow:var(--shadow-md);
+    overflow-y:auto;
+  }
+  .mobile-drawer.open{transform:translateX(0);}
+  .mobile-drawer-brand{
+    font-size:18px;
+    font-weight:700;
+    padding:6px 10px 22px;
+    color:var(--text);
+  }
+  .mobile-drawer-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:13px 12px;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:15px;
+    color:var(--text);
+    transition:background .15s;
+  }
+  .mobile-drawer-item:hover{background:var(--hover-overlay);}
+  .mobile-drawer-item.active{background:var(--accent-light);color:var(--accent);font-weight:700;}
+  .mobile-drawer-icon{width:22px;text-align:center;font-size:16px;}
+  .mobile-drawer-label{flex:1;}
+  .mobile-drawer-count{
+    font-size:12.5px;
+    color:var(--text-sub);
+    min-width:18px;
+    text-align:right;
+  }
+  .mobile-drawer-item.active .mobile-drawer-count{color:var(--accent);}
+
+  .mobile-bottom-nav{
+    display:none;
+    position:fixed;
+    left:0;right:0;bottom:0;
+    background:var(--card);
+    border-top:1px solid var(--border);
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+    align-items:center;
+    justify-content:space-between;
+    gap:2px;
+    z-index:20;
+  }
+  .mobile-nav-btn{
+    border:none;
+    background:transparent;
+    color:var(--text-sub);
+    width:44px;height:44px;
+    flex-shrink:0;
+    border-radius:12px;
+    font-size:17px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    transition:color .15s,background .15s;
+  }
+  .mobile-nav-btn.active{color:var(--accent);background:var(--accent-light);}
+  .mobile-nav-center{
+    width:48px;height:48px;
+    border-radius:50%;
+    background:var(--accent);
+    color:#fff;
+    font-size:18px;
+    box-shadow:0 6px 16px rgba(239,91,63,.35);
+    transform:translateY(-4px);
+  }
+  body[data-theme="dark"] .mobile-nav-center{box-shadow:0 6px 16px rgba(255,122,92,.3);}
+  .mobile-nav-center.active{background:var(--accent-hover);color:#fff;}
+
+  @media (max-width:768px){
+    .sidebar{display:none;}
+    .mobile-topbar{display:flex;}
+    .mobile-bottom-nav{display:flex;}
+    .mobile-drawer-overlay{display:block;}
+    .mobile-drawer{display:block;}
+    .main{padding:16px 16px calc(84px + env(safe-area-inset-bottom));max-width:100%;}
+    .verse-box{display:none;}
+    .task-filter-switch{display:none !important;}
+    .pomodoro-view{padding-bottom:calc(84px + env(safe-area-inset-bottom));}
+    .pomo-card{max-width:100%;}
+  }
+
+  /* Global search overlay */
+  .global-search-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:var(--bg);
+    z-index:90;
+    flex-direction:column;
+  }
+  .global-search-overlay.open{display:flex;}
+  .global-search-header{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:14px 16px;
+    border-bottom:1px solid var(--border);
+    background:var(--card);
+    flex-shrink:0;
+  }
+  .global-search-icon{font-size:15px;color:var(--text-sub);}
+  #global-search-input{
+    flex:1;
+    border:none;
+    background:transparent;
+    font-size:15px;
+    color:var(--text);
+    outline:none;
+  }
+  .global-search-close{
+    border:none;
+    background:var(--hover-overlay);
+    width:32px;height:32px;
+    border-radius:50%;
+    color:var(--text-sub);
+    cursor:pointer;
+    font-size:13px;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .global-search-close:hover{color:var(--accent);}
+  .global-search-results{
+    flex:1;
+    overflow-y:auto;
+    padding:6px 16px 30px;
+    max-width:640px;
+    width:100%;
+    margin:0 auto;
+    box-sizing:border-box;
+  }
+  .gsr-group-label{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--text-sub);
+    letter-spacing:.03em;
+    margin:18px 4px 8px;
+  }
+  .gsr-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px 10px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:background .15s;
+  }
+  .gsr-item:hover{background:var(--hover-overlay);}
+  .gsr-item-text{flex:1;font-size:14px;color:var(--text);}
+  .gsr-empty{
+    text-align:center;
+    color:var(--text-sub);
+    font-size:13px;
+    padding:60px 0;
+  }
 </style>
 </head>
 <body>
 
+<div class="mobile-topbar" id="mobile-topbar">
+  <button class="mobile-hamburger" id="mobile-hamburger" type="button">☰</button>
+  <div class="mobile-topbar-title" id="mobile-topbar-title">Tasks</div>
+  <div class="mobile-topbar-spacer"></div>
+</div>
+
+<div class="mobile-drawer-overlay" id="mobile-drawer-overlay"></div>
+<div class="mobile-drawer" id="mobile-drawer">
+  <div class="mobile-drawer-brand">My <span>To Do</span></div>
+  <div class="mobile-drawer-item" data-mode="today">
+    <span class="mobile-drawer-icon">☀️</span>
+    <span class="mobile-drawer-label">오늘</span>
+    <span class="mobile-drawer-count" id="drawer-count-today">0</span>
+  </div>
+  <div class="mobile-drawer-item" data-mode="tomorrow">
+    <span class="mobile-drawer-icon">🌙</span>
+    <span class="mobile-drawer-label">내일</span>
+    <span class="mobile-drawer-count" id="drawer-count-tomorrow">0</span>
+  </div>
+  <div class="mobile-drawer-item" data-mode="next7">
+    <span class="mobile-drawer-icon">📆</span>
+    <span class="mobile-drawer-label">다음 7일</span>
+    <span class="mobile-drawer-count" id="drawer-count-next7">0</span>
+  </div>
+  <div class="mobile-drawer-item" data-mode="inbox">
+    <span class="mobile-drawer-icon">📥</span>
+    <span class="mobile-drawer-label">기본함</span>
+    <span class="mobile-drawer-count" id="drawer-count-inbox">0</span>
+  </div>
+</div>
+
+<div class="mobile-bottom-nav" id="mobile-bottom-nav">
+  <button class="mobile-nav-btn active" data-view="tasks" type="button" title="Tasks"><span class="mobile-nav-icon">✓</span></button>
+  <button class="mobile-nav-btn" data-view="routines" type="button" title="Routines"><span class="mobile-nav-icon">🔁</span></button>
+  <button class="mobile-nav-btn" data-view="calendar" type="button" title="Calendar"><span class="mobile-nav-icon">📅</span></button>
+  <button class="mobile-nav-btn" data-view="notes" type="button" title="Notes"><span class="mobile-nav-icon">📝</span></button>
+  <button class="mobile-nav-btn mobile-nav-center" data-view="pomodoro" type="button" title="Pomodoro"><span class="mobile-nav-icon">⏺</span></button>
+  <button class="mobile-nav-btn" id="mobile-search-btn" type="button" title="Search"><span class="mobile-nav-icon">🔍</span></button>
+</div>
+
 <div class="sidebar">
   <div class="brand">My <span>To Do</span></div>
+
+  <div class="sidebar-search-btn" id="sidebar-search-btn">
+    <span class="sidebar-quicknav-icon">🔍</span>
+    <span>검색</span>
+  </div>
+
+  <div class="sidebar-quicknav" id="sidebar-quicknav">
+    <div class="sidebar-quicknav-item" data-mode="today">
+      <span class="sidebar-quicknav-icon">☀️</span>
+      <span class="sidebar-quicknav-label">오늘</span>
+      <span class="sidebar-quicknav-count" id="sidebar-count-today">0</span>
+    </div>
+    <div class="sidebar-quicknav-item" data-mode="tomorrow">
+      <span class="sidebar-quicknav-icon">🌙</span>
+      <span class="sidebar-quicknav-label">내일</span>
+      <span class="sidebar-quicknav-count" id="sidebar-count-tomorrow">0</span>
+    </div>
+    <div class="sidebar-quicknav-item" data-mode="next7">
+      <span class="sidebar-quicknav-icon">📆</span>
+      <span class="sidebar-quicknav-label">다음 7일</span>
+      <span class="sidebar-quicknav-count" id="sidebar-count-next7">0</span>
+    </div>
+    <div class="sidebar-quicknav-item" data-mode="inbox">
+      <span class="sidebar-quicknav-icon">📥</span>
+      <span class="sidebar-quicknav-label">기본함</span>
+      <span class="sidebar-quicknav-count" id="sidebar-count-inbox">0</span>
+    </div>
+  </div>
+
   <div class="nav-item active" data-view="tasks">
     <div class="nav-left"><span class="dot"></span>Tasks</div>
     <span class="nav-count" id="count-tasks">0</span>
@@ -1164,6 +1650,9 @@
   <div class="nav-item" data-view="notes">
     <div class="nav-left"><span class="dot"></span>Notes</div>
     <span class="nav-count" id="count-notes">0</span>
+  </div>
+  <div class="nav-item" data-view="pomodoro">
+    <div class="nav-left"><span class="dot"></span>Pomodoro</div>
   </div>
 
   <div class="theme-toggle" id="theme-toggle">
@@ -1263,6 +1752,46 @@
     </div>
     <div class="cal-grid" id="cal-grid"></div>
   </div>
+
+  <div class="pomodoro-view" id="pomodoro-view" style="display:none;">
+    <div class="pomo-card">
+      <div class="pomo-mode-badge" id="pomo-mode-badge">집중 시간</div>
+      <div class="pomo-ring-wrap">
+        <svg class="pomo-ring" viewBox="0 0 240 240">
+          <circle class="pomo-ring-bg" cx="120" cy="120" r="108"></circle>
+          <circle class="pomo-ring-progress" id="pomo-ring-progress" cx="120" cy="120" r="108"></circle>
+        </svg>
+        <div class="pomo-time-wrap">
+          <div class="pomo-time" id="pomo-time">25:00</div>
+          <div class="pomo-cycles" id="pomo-cycles"></div>
+        </div>
+      </div>
+      <div class="pomo-controls">
+        <button class="pomo-btn pomo-btn-side" id="pomo-reset-btn" type="button" title="처음부터">↺</button>
+        <button class="pomo-btn pomo-btn-main" id="pomo-toggle-btn" type="button">시작</button>
+        <button class="pomo-btn pomo-btn-side" id="pomo-skip-btn" type="button" title="다음 세션으로">⏭</button>
+      </div>
+      <div class="pomo-settings-toggle" id="pomo-settings-toggle">⚙ 시간 설정</div>
+      <div class="pomo-settings-panel" id="pomo-settings-panel" style="display:none;">
+        <div class="pomo-setting-row">
+          <label>집중</label>
+          <input type="number" id="pomo-work-input" min="1" max="180" value="25"><span>분</span>
+        </div>
+        <div class="pomo-setting-row">
+          <label>짧은 휴식</label>
+          <input type="number" id="pomo-short-input" min="1" max="60" value="5"><span>분</span>
+        </div>
+        <div class="pomo-setting-row">
+          <label>긴 휴식</label>
+          <input type="number" id="pomo-long-input" min="1" max="120" value="15"><span>분</span>
+        </div>
+        <div class="pomo-setting-row">
+          <label>긴 휴식까지 반복</label>
+          <input type="number" id="pomo-cycles-input" min="1" max="12" value="4"><span>회</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="detail-panel" id="detail-panel">
@@ -1331,6 +1860,15 @@
       <button type="button" class="time-picker-done-btn" id="time-picker-done-btn">완료</button>
     </div>
   </div>
+</div>
+
+<div class="global-search-overlay" id="global-search-overlay">
+  <div class="global-search-header">
+    <span class="global-search-icon">🔍</span>
+    <input type="text" id="global-search-input" placeholder="할일, 루틴, 메모 검색">
+    <button class="global-search-close" id="global-search-close" type="button">✕</button>
+  </div>
+  <div class="global-search-results" id="global-search-results"></div>
 </div>
 
 <script>
@@ -1473,7 +2011,7 @@ let archiveOpen = false;
 let calMode = 'month'; // 'year' | 'month' | 'week' | 'day'
 let calDate = new Date();
 let searchQuery = '';
-let taskViewMode = 'inbox'; // 'inbox' | 'today' | 'tomorrow' | 'next7'
+let taskViewMode = 'today'; // 'inbox' | 'today' | 'tomorrow' | 'next7' — desktop/mobile both land on 오늘 by default
 
 const listEl = document.getElementById('list');
 const emptyEl = document.getElementById('empty-msg');
@@ -1499,6 +2037,130 @@ taskFilterSwitch.querySelectorAll('.task-filter-btn').forEach(btn=>{
     render();
   });
 });
+
+/* ---------- Mobile: hamburger drawer + bottom nav ---------- */
+const mobileTopbarTitle = document.getElementById('mobile-topbar-title');
+const mobileHamburger = document.getElementById('mobile-hamburger');
+const mobileDrawer = document.getElementById('mobile-drawer');
+const mobileDrawerOverlay = document.getElementById('mobile-drawer-overlay');
+
+function openMobileDrawer(){
+  mobileDrawer.classList.add('open');
+  mobileDrawerOverlay.classList.add('open');
+}
+function closeMobileDrawer(){
+  mobileDrawer.classList.remove('open');
+  mobileDrawerOverlay.classList.remove('open');
+}
+mobileHamburger.addEventListener('click', openMobileDrawer);
+mobileDrawerOverlay.addEventListener('click', closeMobileDrawer);
+
+mobileDrawer.querySelectorAll('.mobile-drawer-item').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    taskViewMode = el.dataset.mode;
+    closeMobileDrawer();
+    switchView('tasks');
+  });
+});
+
+function updateMobileDrawer(){
+  mobileDrawer.querySelectorAll('.mobile-drawer-item').forEach(el=>{
+    el.classList.toggle('active', currentView === 'tasks' && el.dataset.mode === taskViewMode);
+  });
+  const today = todayStr();
+  const tomorrow = addDays(today, 1);
+  const in7 = addDays(today, 7);
+  document.getElementById('drawer-count-today').textContent = data.tasks.filter(t=>t.dueDate===today).length;
+  document.getElementById('drawer-count-tomorrow').textContent = data.tasks.filter(t=>t.dueDate===tomorrow).length;
+  document.getElementById('drawer-count-next7').textContent = data.tasks.filter(t=>t.dueDate>today && t.dueDate<=in7).length;
+  document.getElementById('drawer-count-inbox').textContent = data.tasks.length;
+}
+
+/* ---------- Desktop sidebar quick-nav (mirrors mobile drawer) ---------- */
+const sidebarQuicknav = document.getElementById('sidebar-quicknav');
+const sidebarSearchBtn = document.getElementById('sidebar-search-btn');
+
+sidebarQuicknav.querySelectorAll('.sidebar-quicknav-item').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    taskViewMode = el.dataset.mode;
+    switchView('tasks');
+  });
+});
+
+function updateSidebarQuicknav(){
+  sidebarQuicknav.querySelectorAll('.sidebar-quicknav-item').forEach(el=>{
+    el.classList.toggle('active', currentView === 'tasks' && el.dataset.mode === taskViewMode);
+  });
+  const today = todayStr();
+  const tomorrow = addDays(today, 1);
+  const in7 = addDays(today, 7);
+  document.getElementById('sidebar-count-today').textContent = data.tasks.filter(t=>t.dueDate===today).length;
+  document.getElementById('sidebar-count-tomorrow').textContent = data.tasks.filter(t=>t.dueDate===tomorrow).length;
+  document.getElementById('sidebar-count-next7').textContent = data.tasks.filter(t=>t.dueDate>today && t.dueDate<=in7).length;
+  document.getElementById('sidebar-count-inbox').textContent = data.tasks.length;
+}
+
+/* ---------- Global search overlay ---------- */
+const mobileSearchBtn = document.getElementById('mobile-search-btn');
+const globalSearchOverlay = document.getElementById('global-search-overlay');
+const globalSearchInput = document.getElementById('global-search-input');
+const globalSearchClose = document.getElementById('global-search-close');
+const globalSearchResults = document.getElementById('global-search-results');
+
+function openGlobalSearch(){
+  globalSearchOverlay.classList.add('open');
+  globalSearchInput.value = '';
+  renderGlobalSearch('');
+  setTimeout(()=>globalSearchInput.focus(), 50);
+}
+function closeGlobalSearch(){
+  globalSearchOverlay.classList.remove('open');
+}
+mobileSearchBtn.addEventListener('click', openGlobalSearch);
+sidebarSearchBtn.addEventListener('click', openGlobalSearch);
+globalSearchClose.addEventListener('click', closeGlobalSearch);
+globalSearchInput.addEventListener('input', ()=>{
+  renderGlobalSearch(globalSearchInput.value.trim().toLowerCase());
+});
+
+function renderGlobalSearch(q){
+  globalSearchResults.innerHTML = '';
+  if(!q){
+    globalSearchResults.innerHTML = '<div class="gsr-empty">검색어를 입력해보세요.</div>';
+    return;
+  }
+  const taskResults = data.tasks.filter(t=>t.text.toLowerCase().includes(q));
+  const routineResults = data.routines.filter(r=>r.text.toLowerCase().includes(q));
+  const noteResults = data.notes.filter(n=>n.text.toLowerCase().includes(q) || (n.note||'').toLowerCase().includes(q));
+
+  if(taskResults.length===0 && routineResults.length===0 && noteResults.length===0){
+    globalSearchResults.innerHTML = '<div class="gsr-empty">검색 결과가 없어요.</div>';
+    return;
+  }
+
+  function addGroup(label, items, view){
+    if(!items.length) return;
+    const groupLabel = document.createElement('div');
+    groupLabel.className = 'gsr-group-label';
+    groupLabel.textContent = label;
+    globalSearchResults.appendChild(groupLabel);
+    items.forEach(item=>{
+      const row = document.createElement('div');
+      row.className = 'gsr-item';
+      row.innerHTML = `<div class="gsr-item-text">${escapeHtml(item.text)}</div>`;
+      row.addEventListener('click', ()=>{
+        closeGlobalSearch();
+        switchView(view);
+        openDetail(item.id, view);
+      });
+      globalSearchResults.appendChild(row);
+    });
+  }
+  addGroup('할일', taskResults, 'tasks');
+  addGroup('루틴', routineResults, 'routines');
+  addGroup('메모', noteResults, 'notes');
+}
+
 const exportBtn = document.getElementById('export-btn');
 const importBtn = document.getElementById('import-btn');
 const importFile = document.getElementById('import-file');
@@ -2230,36 +2892,45 @@ document.addEventListener('click', (e)=>{
 
 document.getElementById('today-date').textContent = new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
 
-const viewLabels = { tasks:'Tasks', routines:'Routines', calendar:'Calendar', notes:'Notes' };
+const viewLabels = { tasks:'Tasks', routines:'Routines', calendar:'Calendar', notes:'Notes', pomodoro:'Pomodoro' };
 const addPlaceholders = {
   tasks: 'Add a task and press Enter',
   routines: 'Add a routine and press Enter',
   notes: 'Add a note title and press Enter'
 };
 
-document.querySelectorAll('.nav-item').forEach(el=>{
-  el.addEventListener('click', ()=>{
-    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-    el.classList.add('active');
-    currentView = el.dataset.view;
-    viewTitle.textContent = viewLabels[currentView] || '';
-    addInput.placeholder = addPlaceholders[currentView] || '';
+function switchView(view){
+  currentView = view;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.view === view));
+  document.querySelectorAll('.mobile-nav-btn').forEach(n=>n.classList.toggle('active', n.dataset.view === view));
+  viewTitle.textContent = viewLabels[currentView] || '';
+  mobileTopbarTitle.textContent = viewLabels[currentView] || '';
+  addInput.placeholder = addPlaceholders[currentView] || '';
 
-    const isCal = currentView === 'calendar';
-    addBox.style.display = isCal ? 'none' : 'flex';
-    listEl.style.display = isCal ? 'none' : 'flex';
-    calendarViewEl.style.display = isCal ? 'flex' : 'none';
-    searchBox.style.display = isCal ? 'none' : 'flex';
-    addDateBtn.style.display = currentView === 'tasks' ? 'flex' : 'none';
-    taskFilterSwitch.style.display = currentView === 'tasks' ? 'flex' : 'none';
-    if(isCal){
-      emptyEl.style.display = 'none';
-      archiveToggle.style.display = 'none';
-      archiveListEl.classList.remove('open');
-    }
-    archiveOpen = false;
-    render();
-  });
+  const isCal = currentView === 'calendar';
+  const isPomo = currentView === 'pomodoro';
+  addBox.style.display = (isCal || isPomo) ? 'none' : 'flex';
+  listEl.style.display = (isCal || isPomo) ? 'none' : 'flex';
+  calendarViewEl.style.display = isCal ? 'flex' : 'none';
+  pomodoroView.style.display = isPomo ? 'flex' : 'none';
+  searchBox.style.display = (isCal || isPomo) ? 'none' : 'flex';
+  addDateBtn.style.display = currentView === 'tasks' ? 'flex' : 'none';
+  taskFilterSwitch.style.display = currentView === 'tasks' ? 'flex' : 'none';
+  if(isCal || isPomo){
+    emptyEl.style.display = 'none';
+    archiveToggle.style.display = 'none';
+    archiveListEl.classList.remove('open');
+  }
+  archiveOpen = false;
+  render();
+}
+
+document.querySelectorAll('.nav-item').forEach(el=>{
+  el.addEventListener('click', ()=>switchView(el.dataset.view));
+});
+
+document.querySelectorAll('.mobile-nav-btn').forEach(el=>{
+  el.addEventListener('click', ()=>switchView(el.dataset.view));
 });
 
 searchInput.addEventListener('input', ()=>{
@@ -2483,9 +3154,14 @@ function render(){
   document.getElementById('count-tasks').textContent = data.tasks.length;
   document.getElementById('count-routines').textContent = data.routines.filter(r=>!(r.completedDates||[]).includes(todayStr())).length;
   document.getElementById('count-notes').textContent = data.notes.length;
+  updateMobileDrawer();
+  updateSidebarQuicknav();
 
   if(currentView === 'calendar'){
     renderCalendar();
+    return;
+  }
+  if(currentView === 'pomodoro'){
     return;
   }
 
@@ -2954,6 +3630,278 @@ setInterval(()=>{
     render();
   }
 }, 60000);
+
+/* ---------- Pomodoro ---------- */
+const POMODORO_CONFIG_KEY = 'mytodo-pomodoro-config-v1';
+const POMODORO_STATE_KEY = 'mytodo-pomodoro-state-v1';
+
+const pomodoroView = document.getElementById('pomodoro-view');
+const pomoModeBadge = document.getElementById('pomo-mode-badge');
+const pomoRingProgress = document.getElementById('pomo-ring-progress');
+const pomoTimeEl = document.getElementById('pomo-time');
+const pomoCyclesEl = document.getElementById('pomo-cycles');
+const pomoToggleBtn = document.getElementById('pomo-toggle-btn');
+const pomoResetBtn = document.getElementById('pomo-reset-btn');
+const pomoSkipBtn = document.getElementById('pomo-skip-btn');
+const pomoSettingsToggle = document.getElementById('pomo-settings-toggle');
+const pomoSettingsPanel = document.getElementById('pomo-settings-panel');
+const pomoWorkInput = document.getElementById('pomo-work-input');
+const pomoShortInput = document.getElementById('pomo-short-input');
+const pomoLongInput = document.getElementById('pomo-long-input');
+const pomoCyclesInput = document.getElementById('pomo-cycles-input');
+
+const POMO_RING_CIRC = 2 * Math.PI * 108;
+pomoRingProgress.style.strokeDasharray = String(POMO_RING_CIRC);
+
+function loadPomodoroConfig(){
+  let cfg = { workMin:25, shortMin:5, longMin:15, cyclesBeforeLong:4 };
+  try{
+    const raw = localStorage.getItem(POMODORO_CONFIG_KEY);
+    if(raw) cfg = Object.assign(cfg, JSON.parse(raw));
+  }catch(e){}
+  cfg.workMin = Math.max(1, parseInt(cfg.workMin)||25);
+  cfg.shortMin = Math.max(1, parseInt(cfg.shortMin)||5);
+  cfg.longMin = Math.max(1, parseInt(cfg.longMin)||15);
+  cfg.cyclesBeforeLong = Math.max(1, parseInt(cfg.cyclesBeforeLong)||4);
+  return cfg;
+}
+function savePomodoroConfig(){
+  localStorage.setItem(POMODORO_CONFIG_KEY, JSON.stringify(pomoConfig));
+}
+
+let pomoConfig = loadPomodoroConfig();
+let pomoState = {
+  mode: 'work', // 'work' | 'short' | 'long'
+  completedWork: 0,
+  remainingSec: pomoConfig.workMin*60,
+  running: false,
+  endAt: null
+};
+let pomoTimerHandle = null;
+
+function pomoDurationSec(mode){
+  if(mode==='work') return pomoConfig.workMin*60;
+  if(mode==='short') return pomoConfig.shortMin*60;
+  return pomoConfig.longMin*60;
+}
+function pomoModeLabel(mode){
+  if(mode==='work') return '집중 시간';
+  if(mode==='short') return '짧은 휴식';
+  return '긴 휴식';
+}
+function pomoModeClass(mode){
+  if(mode==='short') return ' mode-short';
+  if(mode==='long') return ' mode-long';
+  return '';
+}
+
+function savePomoState(){
+  localStorage.setItem(POMODORO_STATE_KEY, JSON.stringify({
+    mode: pomoState.mode,
+    completedWork: pomoState.completedWork,
+    remainingSec: pomoState.remainingSec,
+    running: pomoState.running,
+    endAt: pomoState.endAt
+  }));
+}
+
+function loadPomoState(){
+  try{
+    const raw = localStorage.getItem(POMODORO_STATE_KEY);
+    if(!raw) return;
+    const s = JSON.parse(raw);
+    pomoState.mode = (s.mode === 'short' || s.mode === 'long') ? s.mode : 'work';
+    pomoState.completedWork = Number.isFinite(s.completedWork) ? s.completedWork : 0;
+    pomoState.running = !!s.running;
+    pomoState.endAt = s.endAt || null;
+    if(pomoState.running && pomoState.endAt){
+      const remain = Math.round((pomoState.endAt - Date.now())/1000);
+      if(remain > 0){
+        pomoState.remainingSec = remain;
+      }else{
+        pomoState.running = false;
+        pomoState.endAt = null;
+        pomoState.remainingSec = 0;
+      }
+    }else{
+      pomoState.remainingSec = Number.isFinite(s.remainingSec) ? s.remainingSec : pomoDurationSec(pomoState.mode);
+    }
+  }catch(e){}
+}
+
+function renderPomodoro(){
+  pomoModeBadge.textContent = pomoModeLabel(pomoState.mode);
+  pomoModeBadge.className = 'pomo-mode-badge' + pomoModeClass(pomoState.mode);
+  pomoRingProgress.setAttribute('class', 'pomo-ring-progress' + pomoModeClass(pomoState.mode));
+
+  const total = pomoDurationSec(pomoState.mode);
+  const remaining = Math.max(0, pomoState.remainingSec);
+  const m = Math.floor(remaining/60);
+  const s = remaining%60;
+  pomoTimeEl.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+  const ratio = total > 0 ? Math.max(0, Math.min(1, remaining/total)) : 0;
+  pomoRingProgress.style.strokeDashoffset = String(POMO_RING_CIRC * (1-ratio));
+
+  pomoToggleBtn.textContent = pomoState.running ? '일시정지' : (pomoState.remainingSec < total ? '계속' : '시작');
+
+  pomoCyclesEl.innerHTML = '';
+  for(let i=0;i<pomoConfig.cyclesBeforeLong;i++){
+    const dot = document.createElement('div');
+    dot.className = 'pomo-cycle-dot';
+    if(i < pomoState.completedWork) dot.classList.add('done');
+    if(i === pomoState.completedWork && pomoState.mode==='work') dot.classList.add('current');
+    pomoCyclesEl.appendChild(dot);
+  }
+}
+
+function pomoTick(){
+  if(!pomoState.running || !pomoState.endAt) return;
+  const remain = Math.round((pomoState.endAt - Date.now())/1000);
+  if(remain <= 0){
+    pomoState.remainingSec = 0;
+    renderPomodoro();
+    pomoCompleteSession();
+  }else{
+    pomoState.remainingSec = remain;
+    renderPomodoro();
+  }
+}
+
+function pomoStart(){
+  if(pomoState.running) return;
+  if(pomoState.remainingSec <= 0) pomoState.remainingSec = pomoDurationSec(pomoState.mode);
+  pomoState.running = true;
+  pomoState.endAt = Date.now() + pomoState.remainingSec*1000;
+  savePomoState();
+  renderPomodoro();
+  if(!pomoTimerHandle) pomoTimerHandle = setInterval(pomoTick, 250);
+}
+
+function pomoPause(){
+  if(!pomoState.running) return;
+  pomoState.running = false;
+  pomoState.endAt = null;
+  savePomoState();
+  renderPomodoro();
+}
+
+function pomoReset(){
+  pomoState.running = false;
+  pomoState.endAt = null;
+  pomoState.remainingSec = pomoDurationSec(pomoState.mode);
+  savePomoState();
+  renderPomodoro();
+}
+
+function pomoAdvanceMode(){
+  if(pomoState.mode === 'work'){
+    pomoState.completedWork += 1;
+    if(pomoState.completedWork >= pomoConfig.cyclesBeforeLong){
+      pomoState.mode = 'long';
+      pomoState.completedWork = 0;
+    }else{
+      pomoState.mode = 'short';
+    }
+  }else{
+    pomoState.mode = 'work';
+  }
+  pomoState.running = false;
+  pomoState.endAt = null;
+  pomoState.remainingSec = pomoDurationSec(pomoState.mode);
+  savePomoState();
+  renderPomodoro();
+}
+
+function pomoCompleteSession(){
+  const finishedMode = pomoState.mode;
+  pomoState.running = false;
+  pomoState.endAt = null;
+  playPomodoroAlarm();
+  notifyPomodoroComplete(finishedMode);
+  pomoAdvanceMode();
+}
+
+pomoToggleBtn.addEventListener('click', ()=>{
+  if(pomoState.running) pomoPause(); else pomoStart();
+});
+pomoResetBtn.addEventListener('click', pomoReset);
+pomoSkipBtn.addEventListener('click', pomoAdvanceMode);
+
+pomoSettingsToggle.addEventListener('click', ()=>{
+  const open = pomoSettingsPanel.style.display !== 'none';
+  pomoSettingsPanel.style.display = open ? 'none' : 'flex';
+});
+
+function syncPomoSettingsInputs(){
+  pomoWorkInput.value = pomoConfig.workMin;
+  pomoShortInput.value = pomoConfig.shortMin;
+  pomoLongInput.value = pomoConfig.longMin;
+  pomoCyclesInput.value = pomoConfig.cyclesBeforeLong;
+}
+
+function onPomoSettingChange(){
+  pomoConfig = {
+    workMin: Math.max(1, parseInt(pomoWorkInput.value)||25),
+    shortMin: Math.max(1, parseInt(pomoShortInput.value)||5),
+    longMin: Math.max(1, parseInt(pomoLongInput.value)||15),
+    cyclesBeforeLong: Math.max(1, parseInt(pomoCyclesInput.value)||4)
+  };
+  savePomodoroConfig();
+  syncPomoSettingsInputs();
+  if(!pomoState.running){
+    pomoState.remainingSec = pomoDurationSec(pomoState.mode);
+    savePomoState();
+  }
+  renderPomodoro();
+}
+[pomoWorkInput, pomoShortInput, pomoLongInput, pomoCyclesInput].forEach(inp=>{
+  inp.addEventListener('change', onPomoSettingChange);
+});
+
+// 알람음: 외부 파일 없이 Web Audio API로 화음 합성 (오프라인에서도 동작)
+let pomoAudioCtx = null;
+function playPomodoroAlarm(){
+  try{
+    if(!pomoAudioCtx) pomoAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = pomoAudioCtx;
+    if(ctx.state === 'suspended') ctx.resume();
+    const now = ctx.currentTime;
+    const notes = [880, 1108.73, 1318.51];
+    notes.forEach((freq, i)=>{
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const start = now + i*0.16;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.25, start+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, start+0.5);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start+0.55);
+    });
+  }catch(e){ /* Web Audio 사용 불가 — 무시 */ }
+}
+
+function notifyPomodoroComplete(finishedMode){
+  const msg = finishedMode==='work' ? '집중 시간이 끝났어요. 휴식하세요!' : '휴식이 끝났어요. 다시 집중해볼까요?';
+  try{
+    if(typeof Notification !== 'undefined'){
+      if(Notification.permission === 'granted'){
+        new Notification('My To Do', { body: msg });
+      }else if(Notification.permission !== 'denied'){
+        Notification.requestPermission();
+      }
+    }
+  }catch(e){ /* 알림 API 사용 불가 — 무시 */ }
+}
+
+syncPomoSettingsInputs();
+loadPomoState();
+renderPomodoro();
+if(pomoState.running && !pomoTimerHandle) pomoTimerHandle = setInterval(pomoTick, 250);
 
 render();
 </script>
