@@ -2,8 +2,19 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>My To Do</title>
+
+<!-- PWA: 홈 화면에 추가해서 앱처럼 쓰기 위한 설정 -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#EF5B3F">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My To Do">
+
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root{
@@ -1360,8 +1371,10 @@
     padding:calc(4px + env(safe-area-inset-top)) 10px 4px;
     background:var(--card);
     border-bottom:1px solid var(--border);
-    position:sticky;
+    position:fixed;
     top:0;
+    left:0;
+    right:0;
     z-index:20;
   }
   .mobile-hamburger{
@@ -1474,7 +1487,7 @@
     .mobile-bottom-nav{display:flex;}
     .mobile-drawer-overlay{display:block;}
     .mobile-drawer{display:block;}
-    .main{padding:16px 16px calc(84px + env(safe-area-inset-bottom));max-width:100%;}
+    .main{padding:calc(58px + env(safe-area-inset-top)) 16px calc(84px + env(safe-area-inset-bottom));max-width:100%;}
     .verse-box{display:none;}
     .task-filter-switch{display:none !important;}
     .pomodoro-view{padding-bottom:calc(84px + env(safe-area-inset-bottom));}
@@ -3918,6 +3931,13 @@ renderPomodoro();
 if(pomoState.running && !pomoTimerHandle) pomoTimerHandle = setInterval(pomoTick, 250);
 
 render();
+
+// PWA: 서비스 워커 등록 (홈 화면 추가 + 오프라인 지원). file://로 열었을 때는 건너뜀.
+if('serviceWorker' in navigator && location.protocol !== 'file:'){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>
