@@ -90,6 +90,8 @@
   .sidebar-quicknav-item:hover{background:var(--hover-overlay);}
   .sidebar-quicknav-item.active{background:var(--accent-light);color:var(--accent);font-weight:700;}
   .sidebar-quicknav-icon{width:18px;text-align:center;font-size:13px;flex-shrink:0;}
+  .dot-today{color:var(--accent);}
+  .dot-tomorrow{color:var(--text-sub);}
   .sidebar-quicknav-label{flex:1;}
   .sidebar-quicknav-count{font-size:11.5px;color:var(--text-sub);}
   .sidebar-quicknav-item.active .sidebar-quicknav-count{color:var(--accent);}
@@ -1513,6 +1515,33 @@
       flex:1 1 140px;
       min-width:140px;
     }
+
+    /* 전체적으로 글씨를 약 2px 키움 (가독성) */
+    .item-text{font-size:16.5px;}
+    .item-tag{font-size:13px;}
+    .empty{font-size:15.5px;}
+    .note-preview{font-size:14.5px;}
+    .archive-item{font-size:15.5px;}
+    .mobile-drawer-item{font-size:17px;}
+    .search-box input{font-size:15.5px;}
+    .add-box input{font-size:16.5px;}
+    .add-box button{font-size:15px;}
+    .main-title{font-size:27px;}
+    .gsr-item-text{font-size:16px;}
+    .detail-title-input{font-size:18px;}
+    .detail-note{font-size:15.5px;}
+    .detail-subtask-add input{font-size:15px;}
+
+    /* 첫화면(모바일 오늘 필터)에서 오늘/루틴/완료를 순서대로 섹션으로 표시 */
+    .mobile-section-label{
+      font-size:13px;
+      font-weight:700;
+      color:var(--text-sub);
+      margin:18px 2px 8px;
+    }
+    .mobile-section-label:first-of-type{margin-top:0;}
+    .mobile-today-routines{margin-top:4px;}
+    .mobile-today-routines .list{border-left:3px solid var(--text-sub);}
   }
 
   /* Global search overlay */
@@ -1602,12 +1631,12 @@
 <div class="mobile-drawer" id="mobile-drawer">
   <div class="mobile-drawer-brand">My <span>To Do</span></div>
   <div class="mobile-drawer-item" data-mode="today">
-    <span class="mobile-drawer-icon">☀️</span>
+    <span class="mobile-drawer-icon dot-today">●</span>
     <span class="mobile-drawer-label">오늘</span>
     <span class="mobile-drawer-count" id="drawer-count-today">0</span>
   </div>
   <div class="mobile-drawer-item" data-mode="tomorrow">
-    <span class="mobile-drawer-icon">🌙</span>
+    <span class="mobile-drawer-icon dot-tomorrow">◑</span>
     <span class="mobile-drawer-label">내일</span>
     <span class="mobile-drawer-count" id="drawer-count-tomorrow">0</span>
   </div>
@@ -1642,12 +1671,12 @@
 
   <div class="sidebar-quicknav" id="sidebar-quicknav">
     <div class="sidebar-quicknav-item" data-mode="today">
-      <span class="sidebar-quicknav-icon">☀️</span>
+      <span class="sidebar-quicknav-icon dot-today">●</span>
       <span class="sidebar-quicknav-label">오늘</span>
       <span class="sidebar-quicknav-count" id="sidebar-count-today">0</span>
     </div>
     <div class="sidebar-quicknav-item" data-mode="tomorrow">
-      <span class="sidebar-quicknav-icon">🌙</span>
+      <span class="sidebar-quicknav-icon dot-tomorrow">◑</span>
       <span class="sidebar-quicknav-label">내일</span>
       <span class="sidebar-quicknav-count" id="sidebar-count-tomorrow">0</span>
     </div>
@@ -1752,9 +1781,16 @@
     <button id="add-btn">추가</button>
   </div>
 
+  <div class="mobile-section-label" id="mobile-section-label-today" style="display:none;">오늘</div>
   <div class="list" id="list"></div>
   <div class="empty" id="empty-msg" style="display:none;"></div>
 
+  <div class="mobile-today-routines" id="mobile-today-routines" style="display:none;">
+    <div class="mobile-section-label">루틴</div>
+    <div class="list" id="mobile-routines-list"></div>
+  </div>
+
+  <div class="mobile-section-label" id="mobile-section-label-done" style="display:none;">완료</div>
   <div class="archive-toggle" id="archive-toggle" style="display:none;">
     <span id="archive-arrow">▸</span> <span id="archive-label">완료된 항목</span>
   </div>
@@ -3194,6 +3230,11 @@ function render(){
 
   listEl.innerHTML = '';
 
+  /* 모바일 첫화면(오늘/루틴/완료) 섹션은 기본적으로 숨기고, tasks 뷰의 '오늘' 필터일 때만 표시 */
+  document.getElementById('mobile-section-label-today').style.display = 'none';
+  document.getElementById('mobile-section-label-done').style.display = 'none';
+  document.getElementById('mobile-today-routines').style.display = 'none';
+
   if(currentView === 'tasks'){
     taskFilterSwitch.querySelectorAll('.task-filter-btn').forEach(b=>{
       b.classList.toggle('active', b.dataset.mode === taskViewMode);
@@ -3278,6 +3319,51 @@ function render(){
       el.querySelector('[data-action="delete"]').addEventListener('click', ()=>deleteCompleted(t.id));
       archiveListEl.appendChild(el);
     });
+
+    /* 모바일 첫화면: 오늘 필터일 때 오늘/루틴/완료 섹션을 순서대로 노출 */
+    const mobileLabelToday = document.getElementById('mobile-section-label-today');
+    const mobileLabelDone = document.getElementById('mobile-section-label-done');
+    const mobileRoutinesBox = document.getElementById('mobile-today-routines');
+    const mobileRoutinesListEl = document.getElementById('mobile-routines-list');
+    const showMobileHome = taskViewMode === 'today' && !searchQuery;
+    mobileLabelToday.style.display = showMobileHome ? 'block' : 'none';
+    mobileLabelDone.style.display = showMobileHome ? 'block' : 'none';
+    mobileRoutinesBox.style.display = showMobileHome ? 'block' : 'none';
+
+    if(showMobileHome){
+      const today = todayStr();
+      const todayWeekday = new Date().getDay();
+      const todaysRoutines = data.routines.filter(r=>{
+        const days = r.days || [];
+        return days.length === 0 || days.includes(todayWeekday);
+      });
+      mobileRoutinesListEl.innerHTML = '';
+      if(todaysRoutines.length === 0){
+        mobileRoutinesListEl.innerHTML = `<div class="empty" style="display:block;">오늘 예정된 루틴이 없어요.</div>`;
+      }else{
+        todaysRoutines.forEach(r=>{
+          const done = (r.completedDates||[]).includes(today);
+          const el = document.createElement('div');
+          el.className = 'item' + (done ? ' checked' : '') + (r.priority ? ' priority-'+r.priority : '');
+          el.dataset.id = r.id;
+          const prog = subtaskProgress(r);
+          el.innerHTML = `
+            <div class="checkbox ${done?'checked':''}"></div>
+            <div class="item-text">${escapeHtml(r.text)}</div>
+            ${r.note && r.note.trim() ? '<span class="note-dot" title="메모 있음">📝</span>' : ''}
+            ${prog ? `<div class="item-progress" title="체크리스트 ${prog.done}/${prog.total}"><div class="item-progress-bar"><div class="item-progress-bar-fill" style="width:${prog.percent}%"></div></div>${prog.percent}%</div>` : ''}
+            <div class="item-tag item-time-tag" title="시간 설정">${formatTimeRange(r.startTime,r.endTime) ? '🕐 '+formatTimeRange(r.startTime,r.endTime) : '🕐'}</div>
+          `;
+          el.querySelector('.checkbox').addEventListener('click', ()=>toggleRoutine(r.id));
+          el.querySelector('.item-text').addEventListener('click', ()=>openDetail(r.id, 'routines'));
+          el.querySelector('.item-time-tag').addEventListener('click', (e)=>{
+            e.stopPropagation();
+            openTimePicker(r, 'startTime', '시작 시간');
+          });
+          mobileRoutinesListEl.appendChild(el);
+        });
+      }
+    }
 
   }else if(currentView === 'routines'){
     archiveToggle.style.display = 'none';
