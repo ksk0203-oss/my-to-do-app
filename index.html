@@ -1,0 +1,2794 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My To Do</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --accent:#EF5B3F;
+    --accent-hover:#E14E32;
+    --accent-light:#FCE9E4;
+    --bg:#F6F4F1;
+    --card:#FFFFFF;
+    --border:#E9E5DF;
+    --text:#211E1B;
+    --text-sub:#8B857C;
+    --checkbox-border:#D9D3C8;
+    --hover-overlay:rgba(33,28,20,.035);
+    --shadow-sm:0 1px 2px rgba(40,30,15,.05), 0 1px 1px rgba(40,30,15,.04);
+    --shadow-md:0 10px 24px rgba(40,30,15,.08), 0 2px 6px rgba(40,30,15,.05);
+    --radius:12px;
+  }
+  body[data-theme="dark"]{
+    --accent:#FF7A5C;
+    --accent-hover:#FF8F72;
+    --accent-light:#3A2620;
+    --bg:#17181A;
+    --card:#212226;
+    --border:#2D2E32;
+    --text:#EDEDEF;
+    --text-sub:#8B8B93;
+    --checkbox-border:#45464B;
+    --hover-overlay:rgba(255,255,255,.045);
+    --shadow-sm:0 1px 2px rgba(0,0,0,.25);
+    --shadow-md:0 10px 28px rgba(0,0,0,.4), 0 2px 8px rgba(0,0,0,.3);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Pretendard','Segoe UI','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    height:100vh;
+    display:flex;
+    overflow:hidden;
+    transition:background .2s,color .2s;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* Sidebar */
+  .sidebar{
+    width:220px;
+    background:var(--card);
+    border-right:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    padding:20px 12px;
+    flex-shrink:0;
+  }
+  .brand{
+    font-size:18.5px;
+    font-weight:700;
+    letter-spacing:-.02em;
+    padding:6px 10px 26px 10px;
+    color:var(--text);
+  }
+  .brand span{color:var(--accent);}
+  .nav-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 12px;
+    border-radius:9px;
+    cursor:pointer;
+    font-size:14px;
+    font-weight:500;
+    color:var(--text-sub);
+    margin-bottom:2px;
+    border-left:2px solid transparent;
+    transition:background .15s, color .15s;
+  }
+  .nav-item:hover{background:var(--hover-overlay);color:var(--text);}
+  .nav-item.active{background:var(--accent-light);color:var(--accent);font-weight:600;border-left-color:var(--accent);}
+  .nav-item .dot{
+    width:7px;height:7px;border-radius:50%;margin-right:10px;flex-shrink:0;
+  }
+  .nav-item.active .dot{background:var(--accent);}
+  .nav-item:not(.active) .dot{background:var(--checkbox-border);}
+  .nav-left{display:flex;align-items:center;}
+  .nav-count{
+    font-size:11.5px;
+    font-weight:600;
+    color:var(--text-sub);
+    background:var(--hover-overlay);
+    padding:1px 8px;
+    border-radius:10px;
+  }
+  .nav-item.active .nav-count{background:var(--card);color:var(--accent);}
+  .verse-box{
+    text-align:right;
+    padding:2px 14px 2px 0;
+    border-right:2px solid var(--accent);
+    max-width:260px;
+  }
+  .verse-text{
+    font-size:12px;
+    font-style:italic;
+    line-height:1.6;
+    color:var(--text-sub);
+  }
+  .verse-ref{
+    font-size:11px;
+    font-weight:600;
+    color:var(--accent);
+    margin-top:6px;
+  }
+  .sidebar-footer{
+    margin-top:auto;
+    font-size:11.5px;
+    line-height:1.5;
+    color:var(--text-sub);
+    padding:10px;
+  }
+  .theme-toggle{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 12px;
+    border-radius:9px;
+    background:var(--hover-overlay);
+    cursor:pointer;
+    font-size:13px;
+    color:var(--text);
+    margin-bottom:10px;
+    transition:background .15s;
+  }
+  .theme-toggle:hover{background:var(--border);}
+  .data-actions{
+    display:flex;
+    gap:6px;
+    margin-bottom:10px;
+  }
+  .data-btn{
+    flex:1;
+    border:1px solid var(--border);
+    background:var(--card);
+    color:var(--text-sub);
+    font-size:11.5px;
+    padding:7px 0;
+    border-radius:8px;
+    cursor:pointer;
+    text-align:center;
+    transition:border-color .15s, color .15s, box-shadow .15s;
+  }
+  .data-btn:hover{color:var(--accent);border-color:var(--accent);box-shadow:var(--shadow-sm);}
+
+  .google-sync-box{
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:10px;
+    margin-bottom:10px;
+    background:var(--card);
+  }
+  .google-sync-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--text);
+    margin-bottom:8px;
+  }
+  .google-sync-status{
+    font-size:11px;
+    font-weight:500;
+    color:var(--text-sub);
+    padding:2px 8px;
+    border-radius:20px;
+    background:var(--hover-overlay);
+  }
+  .google-sync-status.connected{color:#2E8B57;background:rgba(46,139,87,.12);}
+  .google-sync-actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .google-sync-actions .data-btn{flex:1;min-width:70px;}
+  .google-settings-toggle{
+    font-size:11px;
+    color:var(--text-sub);
+    cursor:pointer;
+    margin-top:8px;
+    text-align:center;
+    padding:4px 0;
+  }
+  .google-settings-toggle:hover{color:var(--accent);}
+  .google-settings-panel{margin-top:8px;}
+  .google-settings-panel input{
+    width:100%;
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--text);
+    font-size:11.5px;
+    padding:7px 8px;
+    border-radius:7px;
+    outline:none;
+    margin-top:4px;
+  }
+  .google-settings-panel input:focus{border-color:var(--accent);}
+  .google-help-text{
+    font-size:10.5px;
+    line-height:1.6;
+    color:var(--text-sub);
+    margin-top:6px;
+  }
+  .google-help-text a{color:var(--accent);}
+  .google-file-warning{
+    margin-top:8px;
+    font-size:10.5px;
+    line-height:1.5;
+    color:#B23A2E;
+    background:rgba(178,58,46,.1);
+    border-radius:7px;
+    padding:7px 8px;
+  }
+  body[data-theme="dark"] .google-file-warning{color:#FF9C8C;background:rgba(255,122,92,.12);}
+
+  /* Main */
+  .main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    padding:32px 40px;
+    max-width:720px;
+    margin:0 auto;
+    width:100%;
+    overflow-y:auto;
+  }
+  .main-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:22px;
+  }
+  .main-title{
+    font-size:25px;
+    font-weight:800;
+    letter-spacing:-.02em;
+  }
+  .main-date{
+    font-size:13px;
+    color:var(--text-sub);
+    margin-top:3px;
+  }
+
+  /* Search */
+  .search-box{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:9px 14px;
+    margin-bottom:12px;
+    box-shadow:var(--shadow-sm);
+    transition:box-shadow .15s, border-color .15s;
+  }
+  .search-box:focus-within{border-color:var(--accent);box-shadow:var(--shadow-md);}
+  .search-icon{font-size:13px;opacity:.55;}
+  .search-box input{
+    flex:1;
+    border:none;
+    outline:none;
+    font-size:13.5px;
+    background:transparent;
+    color:var(--text);
+  }
+  .search-box input::placeholder{color:var(--text-sub);}
+
+  /* Add task */
+  .add-box{
+    display:flex;
+    align-items:center;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:12px 14px;
+    margin-bottom:22px;
+    gap:10px;
+    box-shadow:var(--shadow-sm);
+    transition:box-shadow .15s, border-color .15s;
+  }
+  .add-box:focus-within{border-color:var(--accent);box-shadow:var(--shadow-md);}
+  .add-box .plus{
+    color:var(--accent);
+    font-size:19px;
+    font-weight:700;
+    flex-shrink:0;
+  }
+  .add-box input{
+    flex:1;
+    border:none;
+    outline:none;
+    font-size:14.5px;
+    background:transparent;
+    color:var(--text);
+  }
+  .add-box input::placeholder{color:var(--text-sub);}
+  .add-box button{
+    border:none;
+    background:var(--accent);
+    color:#fff;
+    font-size:13px;
+    font-weight:600;
+    padding:7px 16px;
+    border-radius:8px;
+    cursor:pointer;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .15s, background .15s;
+  }
+  .add-box button:hover{background:var(--accent-hover);}
+  .add-box.filled button{opacity:1;pointer-events:auto;}
+  .add-date-btn{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    font-size:12.5px;
+    color:var(--text-sub);
+    background:var(--hover-overlay);
+    padding:6px 10px;
+    border-radius:7px;
+    cursor:pointer;
+    flex-shrink:0;
+    white-space:nowrap;
+    transition:color .15s, background .15s;
+  }
+  .add-date-btn:hover{color:var(--accent);background:var(--accent-light);}
+  .add-date-icon{font-size:13px;}
+  .add-date-input-hidden{
+    position:absolute;
+    width:1px;height:1px;
+    opacity:0;
+    pointer-events:none;
+    border:none;
+  }
+  /* native date/time-picker icon fix: default black icon is invisible on dark backgrounds */
+  body[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+  body[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator{
+    filter:invert(1) brightness(1.3);
+  }
+
+  /* List */
+  .list{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .item{
+    display:flex;
+    align-items:center;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:13px 14px;
+    gap:12px;
+    box-shadow:var(--shadow-sm);
+    transition:opacity .35s, transform .35s, box-shadow .15s, border-color .15s;
+  }
+  .item:hover{box-shadow:var(--shadow-md);border-color:var(--checkbox-border);}
+  .item.leaving{
+    opacity:0;
+    transform:translateX(12px);
+  }
+  .checkbox{
+    width:20px;height:20px;
+    border-radius:50%;
+    border:1.8px solid var(--checkbox-border);
+    flex-shrink:0;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:background .15s,border-color .15s,box-shadow .15s,transform .1s;
+  }
+  .checkbox:hover{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-light);}
+  .checkbox.checked{
+    background:var(--accent);
+    border-color:var(--accent);
+    transform:scale(1.05);
+  }
+  .checkbox.checked::after{
+    content:'';
+    width:5px;height:9px;
+    border:solid #fff;
+    border-width:0 2px 2px 0;
+    transform:rotate(45deg) translate(-1px,-1px);
+  }
+  .item-text{
+    flex:1;
+    font-size:14.5px;
+    color:var(--text);
+    word-break:break-word;
+    line-height:1.45;
+  }
+  .item.checked .item-text{
+    color:var(--text-sub);
+    text-decoration:line-through;
+  }
+  .item-tag{
+    font-size:11px;
+    font-weight:500;
+    color:var(--text-sub);
+    background:var(--hover-overlay);
+    padding:3px 9px;
+    border-radius:20px;
+    flex-shrink:0;
+  }
+  .item-date-tag{cursor:pointer;transition:color .15s,background .15s;}
+  .item-date-tag:hover{color:var(--accent);background:var(--accent-light);}
+  .item-time-tag{cursor:pointer;transition:color .15s,background .15s;}
+  .item-time-tag:hover{color:var(--accent);background:var(--accent-light);}
+  .item-date-input, .item-time-input{
+    position:absolute;
+    width:1px;height:1px;
+    opacity:0;
+    pointer-events:none;
+    border:none;
+  }
+  .item-del{
+    color:var(--text-sub);
+    font-size:16px;
+    cursor:pointer;
+    opacity:0;
+    transition:opacity .15s, color .15s;
+    flex-shrink:0;
+    padding:2px 4px;
+  }
+  .item:hover .item-del{opacity:1;}
+  .item-del:hover{color:var(--accent);}
+  .item-move{
+    color:var(--text-sub);
+    font-size:15px;
+    cursor:pointer;
+    opacity:0;
+    transition:opacity .15s, color .15s;
+    flex-shrink:0;
+    padding:2px 4px;
+  }
+  .item:hover .item-move{opacity:1;}
+  .item-move:hover{color:var(--accent);}
+
+  .note-item{align-items:flex-start;}
+  .note-item-body{flex:1;cursor:pointer;display:flex;flex-direction:column;gap:4px;}
+  .note-preview{
+    font-size:12.5px;
+    color:var(--text-sub);
+    line-height:1.5;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .note-item .item-del{padding-top:2px;}
+
+  .move-menu{
+    position:fixed;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:var(--shadow-md);
+    padding:6px;
+    min-width:150px;
+    z-index:100;
+  }
+  .move-menu-label{
+    font-size:11px;
+    color:var(--text-sub);
+    padding:6px 10px 4px 10px;
+  }
+  .move-menu-item{
+    padding:9px 10px;
+    font-size:13.5px;
+    border-radius:7px;
+    cursor:pointer;
+    color:var(--text);
+  }
+  .move-menu-item:hover{background:var(--accent-light);color:var(--accent);}
+
+  .empty{
+    text-align:center;
+    color:var(--text-sub);
+    font-size:13.5px;
+    padding:50px 0;
+  }
+
+  /* Completed archive */
+  .archive-toggle{
+    margin-top:26px;
+    font-size:13px;
+    color:var(--text-sub);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .archive-toggle:hover{color:var(--accent);}
+  .archive-list{
+    margin-top:10px;
+    display:none;
+    flex-direction:column;
+    gap:6px;
+  }
+  .archive-list.open{display:flex;}
+  .archive-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 14px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    font-size:13.5px;
+    color:var(--text-sub);
+  }
+  .archive-item .item-text{text-decoration:line-through;color:var(--text-sub);flex:1;}
+  .archive-item .restore{
+    font-size:12px;
+    color:var(--accent);
+    cursor:pointer;
+    flex-shrink:0;
+  }
+
+  .item-text{cursor:pointer;}
+  .note-dot{font-size:12px;flex-shrink:0;opacity:.65;}
+
+  /* Detail panel */
+  .detail-panel{
+    position:fixed;
+    top:0;
+    right:0;
+    height:100vh;
+    width:340px;
+    max-width:88vw;
+    background:var(--card);
+    border-left:1px solid var(--border);
+    box-shadow:-12px 0 32px rgba(0,0,0,.16);
+    transform:translateX(100%);
+    transition:transform .25s ease;
+    z-index:80;
+    padding:24px;
+    display:flex;
+    flex-direction:column;
+    overflow-y:auto;
+  }
+  .detail-panel.open{transform:translateX(0);}
+  .detail-panel-header{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .detail-title-input{
+    flex:1;
+    border:none;
+    outline:none;
+    background:transparent;
+    color:var(--text);
+    font-size:16px;
+    font-weight:600;
+    font-family:inherit;
+    padding:4px 0;
+    border-bottom:1px solid transparent;
+  }
+  .detail-title-input:focus{border-bottom:1px solid var(--accent);}
+  .detail-close{
+    cursor:pointer;
+    color:var(--text-sub);
+    font-size:18px;
+    flex-shrink:0;
+    padding:2px 4px;
+  }
+  .detail-close:hover{color:var(--accent);}
+  .detail-note-label{
+    font-size:12px;
+    color:var(--text-sub);
+    margin-bottom:6px;
+    display:block;
+  }
+  .detail-date-row{
+    margin-bottom:16px;
+  }
+  .detail-date{
+    width:100%;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:13.5px;
+    font-family:inherit;
+    background:var(--bg);
+    color:var(--text);
+    outline:none;
+  }
+  .detail-date:focus{border-color:var(--accent);}
+  .detail-note{
+    min-height:100px;
+    resize:vertical;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:12px;
+    font-size:13.5px;
+    line-height:1.6;
+    font-family:inherit;
+    background:var(--bg);
+    color:var(--text);
+    outline:none;
+    margin-bottom:16px;
+  }
+  .detail-note:focus{border-color:var(--accent);}
+
+  /* Priority */
+  .detail-priority-row{
+    display:flex;
+    gap:6px;
+    margin-bottom:16px;
+  }
+  .priority-btn{
+    flex:1;
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--text-sub);
+    font-size:12px;
+    padding:7px 0;
+    border-radius:7px;
+    cursor:pointer;
+    text-align:center;
+  }
+  .priority-btn.active{color:#fff;border-color:transparent;}
+  .priority-btn[data-p="high"].active{background:#E1554A;}
+  .priority-btn[data-p="medium"].active{background:#E0A233;}
+  .priority-btn[data-p="low"].active{background:#4A8FE0;}
+  .priority-btn[data-p=""].active{background:var(--checkbox-border);color:var(--text);}
+  .item-priority-dot{
+    width:7px;height:7px;border-radius:50%;flex-shrink:0;
+  }
+  .item-priority-dot.high{background:#E1554A;}
+  .item-priority-dot.medium{background:#E0A233;}
+  .item-priority-dot.low{background:#4A8FE0;}
+  .item.priority-high{border-left:3px solid #E1554A;}
+  .item.priority-medium{border-left:3px solid #E0A233;}
+  .item.priority-low{border-left:3px solid #4A8FE0;}
+
+  /* Progress bar in list row */
+  .item-progress{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    flex-shrink:0;
+    font-size:10.5px;
+    color:var(--text-sub);
+  }
+  .item-progress-bar{
+    width:36px;height:5px;
+    border-radius:3px;
+    background:var(--bg);
+    overflow:hidden;
+  }
+  .item-progress-bar-fill{
+    height:100%;
+    background:var(--accent);
+    border-radius:3px;
+  }
+
+  /* Subtasks in detail panel */
+  .detail-subtask-section{margin-bottom:16px;}
+  .detail-subtask-progress{
+    font-size:11.5px;
+    color:var(--text-sub);
+    margin-bottom:8px;
+  }
+  .detail-subtask-list{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    margin-bottom:8px;
+  }
+  .detail-subtask-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .detail-subtask-row .checkbox{width:16px;height:16px;}
+  .detail-subtask-row .item-text{
+    flex:1;
+    font-size:13px;
+    cursor:default;
+  }
+  .detail-subtask-row.done .item-text{color:var(--text-sub);text-decoration:line-through;}
+  .detail-subtask-del{
+    color:var(--text-sub);
+    font-size:13px;
+    cursor:pointer;
+    padding:2px 4px;
+  }
+  .detail-subtask-del:hover{color:var(--accent);}
+  .detail-subtask-add{
+    display:flex;
+  }
+  .detail-subtask-add input{
+    width:100%;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:7px 10px;
+    font-size:13px;
+    font-family:inherit;
+    background:var(--bg);
+    color:var(--text);
+    outline:none;
+  }
+  .detail-subtask-add input:focus{border-color:var(--accent);}
+
+  /* Routine weekday picker */
+  .detail-days-row{
+    display:flex;
+    gap:5px;
+    margin-bottom:16px;
+  }
+  .day-btn{
+    flex:1;
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--text-sub);
+    font-size:11.5px;
+    padding:6px 0;
+    border-radius:7px;
+    cursor:pointer;
+    text-align:center;
+  }
+  .day-btn.active{background:var(--accent);color:#fff;border-color:transparent;}
+
+  /* Start/end time trigger buttons */
+  .time-btn-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .time-btn-col{flex:1;}
+  .time-btn-col label{
+    font-size:12px;
+    color:var(--text-sub);
+    margin-bottom:6px;
+    display:block;
+  }
+  .time-trigger-btn{
+    width:100%;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:13.5px;
+    font-family:inherit;
+    background:var(--bg);
+    color:var(--text);
+    cursor:pointer;
+    text-align:left;
+    transition:border-color .15s;
+  }
+  .time-trigger-btn:hover{border-color:var(--accent);}
+  .time-trigger-btn.unset{color:var(--text-sub);}
+
+  /* iPhone-style rolling time picker */
+  .time-picker-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(20,16,10,.4);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:200;
+  }
+  body[data-theme="dark"] .time-picker-overlay{background:rgba(0,0,0,.55);}
+  .time-picker-overlay.open{display:flex;}
+  .time-picker-modal{
+    background:var(--card);
+    border-radius:20px;
+    width:300px;
+    max-width:88vw;
+    padding:20px;
+    box-shadow:var(--shadow-md);
+  }
+  .time-picker-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .time-picker-title{font-size:15px;font-weight:700;}
+  .time-picker-close{
+    cursor:pointer;
+    color:var(--text-sub);
+    font-size:16px;
+    padding:2px 6px;
+  }
+  .time-picker-close:hover{color:var(--accent);}
+  .time-picker-wheels{
+    position:relative;
+    display:flex;
+    height:160px;
+    border-radius:14px;
+    overflow:hidden;
+    background:var(--bg);
+  }
+  .wheel-highlight{
+    position:absolute;
+    top:64px;
+    left:8px;
+    right:8px;
+    height:32px;
+    border-radius:8px;
+    background:var(--accent-light);
+    border-top:1px solid var(--accent);
+    border-bottom:1px solid var(--accent);
+    pointer-events:none;
+    z-index:1;
+  }
+  .wheel-col{
+    flex:1;
+    height:160px;
+    overflow-y:scroll;
+    scroll-snap-type:y mandatory;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
+    position:relative;
+    -webkit-mask-image:linear-gradient(to bottom, transparent 0, black 28%, black 72%, transparent 100%);
+    mask-image:linear-gradient(to bottom, transparent 0, black 28%, black 72%, transparent 100%);
+  }
+  .wheel-col::-webkit-scrollbar{display:none;}
+  .wheel-item, .wheel-spacer{
+    height:32px;
+    line-height:32px;
+    text-align:center;
+    scroll-snap-align:center;
+    font-size:16px;
+    font-variant-numeric:tabular-nums;
+    color:var(--text-sub);
+    cursor:pointer;
+    user-select:none;
+    transition:color .1s;
+  }
+  .wheel-item.selected{
+    color:var(--text);
+    font-weight:700;
+    font-size:18px;
+  }
+  .wheel-spacer{visibility:hidden;cursor:default;}
+  .time-picker-actions{
+    display:flex;
+    gap:8px;
+    margin-top:18px;
+  }
+  .time-picker-clear-btn{
+    flex:1;
+    border:1px solid var(--border);
+    background:var(--card);
+    color:var(--text-sub);
+    padding:10px 0;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:600;
+    transition:border-color .15s,color .15s;
+  }
+  .time-picker-clear-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .time-picker-done-btn{
+    flex:2;
+    border:none;
+    background:var(--accent);
+    color:#fff;
+    padding:10px 0;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:700;
+    transition:background .15s;
+  }
+  .time-picker-done-btn:hover{background:var(--accent-hover);}
+
+  /* Calendar */
+  .calendar-view{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .cal-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .cal-toolbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .cal-nav{display:flex;align-items:center;gap:4px;}
+  .cal-nav-btn{
+    width:30px;height:30px;
+    border:1px solid var(--border);
+    background:var(--card);
+    border-radius:8px;
+    cursor:pointer;
+    color:var(--text);
+    font-size:15px;
+    display:flex;align-items:center;justify-content:center;
+    transition:border-color .15s,color .15s,box-shadow .15s;
+  }
+  .cal-nav-btn:hover{border-color:var(--accent);color:var(--accent);box-shadow:var(--shadow-sm);}
+  .cal-today-btn{
+    height:30px;padding:0 12px;
+    border:1px solid var(--border);
+    background:var(--card);
+    border-radius:8px;
+    cursor:pointer;
+    color:var(--text);
+    font-size:12.5px;
+    transition:border-color .15s,color .15s,box-shadow .15s;
+  }
+  .cal-today-btn:hover{border-color:var(--accent);color:var(--accent);box-shadow:var(--shadow-sm);}
+  .cal-period-label{font-size:22px;font-weight:800;letter-spacing:-.02em;}
+  .cal-mode-switch{
+    display:flex;
+    background:var(--hover-overlay);
+    border-radius:9px;
+    padding:3px;
+    gap:2px;
+  }
+  .cal-mode-btn{
+    border:none;
+    background:transparent;
+    padding:6px 10px;
+    border-radius:7px;
+    cursor:pointer;
+    font-size:12px;
+    color:var(--text-sub);
+    font-weight:500;
+    white-space:nowrap;
+    transition:background .15s,color .15s,box-shadow .15s;
+  }
+  .cal-mode-btn.active{
+    background:var(--card);
+    color:var(--accent);
+    box-shadow:var(--shadow-sm);
+  }
+
+  .cal-week-header{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    border-bottom:1px solid var(--border);
+    padding-bottom:8px;
+    margin-bottom:2px;
+  }
+  .cal-week-header div{
+    text-align:center;
+    font-size:12px;
+    color:var(--text-sub);
+    font-weight:600;
+  }
+  .cal-month-grid, .cal-week-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+  }
+  .cal-month-grid{grid-auto-rows:min-content;}
+  .cal-week-grid{grid-auto-rows:min-content;}
+  .cal-day-cell{
+    background:transparent;
+    border:none;
+    border-right:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    padding:8px 6px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    cursor:pointer;
+    min-height:100px;
+  }
+  .cal-month-grid .cal-day-cell:nth-child(7n){border-right:none;}
+  .cal-week-grid .cal-day-cell{min-height:420px;}
+  .cal-day-cell:hover{background:var(--hover-overlay);}
+  .cal-day-cell.drag-over{background:var(--accent-light);outline:2px dashed var(--accent);outline-offset:-2px;}
+  .cal-day-cell.out .cal-day-num{opacity:.3;}
+  .cal-day-num{
+    font-size:12px;
+    font-weight:600;
+    color:var(--text);
+    width:22px;height:22px;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:50%;
+    margin-bottom:2px;
+  }
+  .cal-day-cell.today .cal-day-num{background:var(--accent);color:#fff;}
+  .cal-chip{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-size:11px;
+    padding:4px 8px;
+    border-radius:999px;
+    background:#4A4B52;
+    color:#fff;
+    white-space:nowrap;
+    overflow:hidden;
+    cursor:pointer;
+  }
+  .cal-chip[draggable="true"]{cursor:grab;}
+  .cal-chip.dragging{opacity:.35;}
+  .cal-chip .chip-check{
+    flex-shrink:0;
+    width:12px;height:12px;
+    border-radius:50%;
+    border:1.5px solid rgba(255,255,255,.75);
+    display:flex;align-items:center;justify-content:center;
+    font-size:8px;
+    line-height:1;
+  }
+  .cal-chip.done .chip-check{background:rgba(255,255,255,.85);border-color:rgba(255,255,255,.85);color:#333;}
+  .cal-chip-text{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    flex:1;
+  }
+  .cal-chip.done .cal-chip-text{text-decoration:line-through;opacity:.75;}
+
+  .cal-day-view{display:flex;flex-direction:column;gap:8px;}
+  .cal-day-view-header{font-size:14px;font-weight:600;margin-bottom:4px;}
+  .cal-day-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  .cal-day-item .item-text{flex:1;font-size:14px;cursor:pointer;}
+  .cal-day-item.done .item-text{text-decoration:line-through;color:var(--text-sub);}
+  .cal-day-item .item-tag{flex-shrink:0;}
+
+  .cal-year-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;
+  }
+  .cal-mini-month{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:10px;
+    cursor:pointer;
+    box-shadow:var(--shadow-sm);
+    transition:border-color .15s,box-shadow .15s;
+  }
+  .cal-mini-month:hover{border-color:var(--accent);box-shadow:var(--shadow-md);}
+  .cal-mini-month-title{
+    font-size:12.5px;
+    font-weight:700;
+    margin-bottom:6px;
+    text-align:center;
+  }
+  .cal-mini-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:2px;
+  }
+  .cal-mini-day{
+    font-size:9px;
+    text-align:center;
+    height:16px;
+    line-height:16px;
+    border-radius:3px;
+    color:var(--text-sub);
+    position:relative;
+  }
+  .cal-mini-day.has-item::after{
+    content:'';
+    position:absolute;
+    bottom:1px;
+    left:50%;
+    transform:translateX(-50%);
+    width:3px;height:3px;
+    border-radius:50%;
+    background:var(--accent);
+  }
+  .cal-mini-day.today{background:var(--accent);color:#fff;}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="brand">My <span>To Do</span></div>
+  <div class="nav-item active" data-view="tasks">
+    <div class="nav-left"><span class="dot"></span>Tasks</div>
+    <span class="nav-count" id="count-tasks">0</span>
+  </div>
+  <div class="nav-item" data-view="routines">
+    <div class="nav-left"><span class="dot"></span>Routines</div>
+    <span class="nav-count" id="count-routines">0</span>
+  </div>
+  <div class="nav-item" data-view="calendar">
+    <div class="nav-left"><span class="dot"></span>Calendar</div>
+  </div>
+  <div class="nav-item" data-view="notes">
+    <div class="nav-left"><span class="dot"></span>Notes</div>
+    <span class="nav-count" id="count-notes">0</span>
+  </div>
+
+  <div class="theme-toggle" id="theme-toggle">
+    <span id="theme-label">🌙 Dark Mode</span>
+  </div>
+  <div class="data-actions">
+    <button class="data-btn" id="export-btn" type="button">⬇ 내보내기</button>
+    <button class="data-btn" id="import-btn" type="button">⬆ 가져오기</button>
+  </div>
+  <input type="file" id="import-file" accept="application/json,.json" style="display:none;">
+
+  <div class="google-sync-box" id="google-sync-box">
+    <div class="google-sync-header">
+      <span>📅 Google Calendar</span>
+      <span class="google-sync-status" id="google-sync-status">연결 안됨</span>
+    </div>
+    <div class="google-sync-actions">
+      <button class="data-btn" id="google-connect-btn" type="button">연결하기</button>
+      <button class="data-btn" id="google-sync-now-btn" type="button" style="display:none;">지금 동기화</button>
+      <button class="data-btn" id="google-disconnect-btn" type="button" style="display:none;">연결 해제</button>
+    </div>
+    <div class="google-settings-toggle" id="google-settings-toggle">⚙ 연동 설정</div>
+    <div class="google-settings-panel" id="google-settings-panel" style="display:none;">
+      <label class="detail-note-label">OAuth 클라이언트 ID</label>
+      <input type="text" id="google-client-id-input" placeholder="xxxxxxxx.apps.googleusercontent.com">
+      <div class="google-help-text">
+        Google Cloud Console에서 발급받은 OAuth 클라이언트 ID(웹 애플리케이션)를 입력하세요.<br>
+        "승인된 자바스크립트 원본"에 이 페이지 주소(예: http://localhost:8080)를 등록해야 로그인이 동작해요.
+      </div>
+    </div>
+    <div class="google-file-warning" id="google-file-warning" style="display:none;">
+      ⚠ 이 파일을 더블클릭(file://)해서 열면 구글 로그인이 동작하지 않아요. 로컬 서버로 열어주세요.
+    </div>
+  </div>
+
+  <div class="sidebar-footer">모든 데이터는 이 브라우저에만<br>저장됩니다. 백업을 위해 가끔 내보내기를 눌러주세요.</div>
+</div>
+
+<div class="main">
+  <div class="main-header">
+    <div class="main-header-left">
+      <div class="main-title" id="view-title">Tasks</div>
+      <div class="main-date" id="today-date"></div>
+    </div>
+    <div class="verse-box">
+      <p class="verse-text">우리에게 우리 날 계수함을 가르치사<br>지혜로운 마음을 얻게 하소서</p>
+      <p class="verse-ref">시편 90:12</p>
+    </div>
+  </div>
+
+  <div class="search-box" id="search-box">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search-input" placeholder="검색">
+  </div>
+
+  <div class="add-box" id="add-box">
+    <span class="plus">＋</span>
+    <input type="text" id="add-input" placeholder="Add a task and press Enter">
+    <label class="add-date-btn" id="add-date-btn" for="add-date-input" title="날짜 선택">
+      <span class="add-date-icon">📅</span><span id="add-date-label">오늘</span>
+    </label>
+    <input type="date" id="add-date-input" class="add-date-input-hidden">
+    <button id="add-btn">추가</button>
+  </div>
+
+  <div class="list" id="list"></div>
+  <div class="empty" id="empty-msg" style="display:none;"></div>
+
+  <div class="archive-toggle" id="archive-toggle" style="display:none;">
+    <span id="archive-arrow">▸</span> <span id="archive-label">완료된 항목</span>
+  </div>
+  <div class="archive-list" id="archive-list"></div>
+
+  <div class="calendar-view" id="calendar-view" style="display:none;">
+    <div class="cal-toolbar">
+      <div class="cal-period-label" id="cal-period-label"></div>
+      <div class="cal-toolbar-right">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" id="cal-prev" type="button">‹</button>
+        <button class="cal-today-btn" id="cal-today" type="button">오늘</button>
+        <button class="cal-nav-btn" id="cal-next" type="button">›</button>
+      </div>
+      <div class="cal-mode-switch" id="cal-mode-switch">
+        <button class="cal-mode-btn" data-mode="year" type="button">Year</button>
+        <button class="cal-mode-btn" data-mode="month" type="button">Month</button>
+        <button class="cal-mode-btn" data-mode="week" type="button">Week</button>
+        <button class="cal-mode-btn" data-mode="day" type="button">Day</button>
+      </div>
+      </div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+</div>
+
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-panel-header">
+    <input type="text" class="detail-title-input" id="detail-title-input" placeholder="제목">
+    <div class="detail-close" id="detail-close">✕</div>
+  </div>
+  <div class="detail-date-row" id="detail-date-row">
+    <label class="detail-note-label" for="detail-date">날짜</label>
+    <input type="date" class="detail-date" id="detail-date">
+  </div>
+  <div class="time-btn-row" id="time-btn-row">
+    <div class="time-btn-col">
+      <label>시작 시간</label>
+      <button type="button" class="time-trigger-btn unset" id="detail-start-time-btn">시간 선택</button>
+    </div>
+    <div class="time-btn-col">
+      <label>종료 시간</label>
+      <button type="button" class="time-trigger-btn unset" id="detail-end-time-btn">시간 선택</button>
+    </div>
+  </div>
+  <div class="detail-priority-row" id="detail-priority-row">
+    <button class="priority-btn" data-p="" type="button">없음</button>
+    <button class="priority-btn" data-p="low" type="button">낮음</button>
+    <button class="priority-btn" data-p="medium" type="button">보통</button>
+    <button class="priority-btn" data-p="high" type="button">높음</button>
+  </div>
+  <div class="detail-days-row" id="detail-days-row">
+    <button class="day-btn" data-day="0" type="button">일</button>
+    <button class="day-btn" data-day="1" type="button">월</button>
+    <button class="day-btn" data-day="2" type="button">화</button>
+    <button class="day-btn" data-day="3" type="button">수</button>
+    <button class="day-btn" data-day="4" type="button">목</button>
+    <button class="day-btn" data-day="5" type="button">금</button>
+    <button class="day-btn" data-day="6" type="button">토</button>
+  </div>
+  <div class="detail-note-label">메모</div>
+  <textarea class="detail-note" id="detail-note" placeholder="세부사항을 적어보세요..."></textarea>
+  <div class="detail-subtask-section" id="detail-subtask-section">
+    <div class="detail-note-label">체크리스트</div>
+    <div class="detail-subtask-progress" id="detail-subtask-progress"></div>
+    <div class="detail-subtask-list" id="detail-subtask-list"></div>
+    <div class="detail-subtask-add">
+      <input type="text" id="detail-subtask-input" placeholder="항목 추가 후 Enter">
+    </div>
+  </div>
+</div>
+
+<div class="time-picker-overlay" id="time-picker-overlay">
+  <div class="time-picker-modal">
+    <div class="time-picker-header">
+      <span class="time-picker-title" id="time-picker-title">시작 시간</span>
+      <span class="time-picker-close" id="time-picker-close">✕</span>
+    </div>
+    <div class="time-picker-wheels">
+      <div class="wheel-highlight"></div>
+      <div class="wheel-col" id="wheel-hour"></div>
+      <div class="wheel-col" id="wheel-minute"></div>
+      <div class="wheel-col" id="wheel-ampm"></div>
+    </div>
+    <div class="time-picker-actions">
+      <button type="button" class="time-picker-clear-btn" id="time-picker-clear-btn">지우기</button>
+      <button type="button" class="time-picker-done-btn" id="time-picker-done-btn">완료</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'mytodo-data-v1';
+const THEME_KEY = 'mytodo-theme-v1';
+
+function applyTheme(theme){
+  document.body.dataset.theme = theme;
+  document.getElementById('theme-label').textContent = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+  localStorage.setItem(THEME_KEY, theme);
+}
+let currentTheme = localStorage.getItem(THEME_KEY) || 'dark';
+applyTheme(currentTheme);
+document.getElementById('theme-toggle').addEventListener('click', ()=>{
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  applyTheme(currentTheme);
+});
+
+function formatDate(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function todayStr(){
+  return formatDate(new Date());
+}
+function dateOnly(ts){
+  return formatDate(new Date(ts));
+}
+function addDays(dateStr, n){
+  const d = new Date(dateStr+'T00:00:00');
+  d.setDate(d.getDate()+n);
+  return formatDate(d);
+}
+function shortDateLabel(dateStr){
+  if(!dateStr) return '';
+  const today = todayStr();
+  if(dateStr === today) return '오늘';
+  if(dateStr === addDays(today,1)) return '내일';
+  if(dateStr === addDays(today,-1)) return '어제';
+  const [y,m,d] = dateStr.split('-');
+  return `${parseInt(m)}/${parseInt(d)}`;
+}
+function routineScheduleLabel(r){
+  const days = r.days || [];
+  if(days.length === 0) return '매일';
+  const labels = ['일','월','화','수','목','금','토'];
+  return [...days].sort((a,b)=>a-b).map(d=>labels[d]).join('');
+}
+function formatTime12(hhmm){
+  if(!hhmm) return '';
+  const [h,m] = hhmm.split(':').map(Number);
+  const period = h < 12 ? '오전' : '오후';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${period} ${h12}:${String(m).padStart(2,'0')}`;
+}
+function formatTimeRange(start, end){
+  if(start && end) return `${formatTime12(start)} - ${formatTime12(end)}`;
+  if(start) return formatTime12(start);
+  if(end) return `~ ${formatTime12(end)}`;
+  return '';
+}
+
+function normalizeData(d){
+  d = d && typeof d === 'object' ? d : {};
+  d.tasks = Array.isArray(d.tasks) ? d.tasks : [];
+  d.completedTasks = Array.isArray(d.completedTasks) ? d.completedTasks : [];
+  d.routines = Array.isArray(d.routines) ? d.routines : [];
+  d.notes = Array.isArray(d.notes) ? d.notes : [];
+  d.notes.forEach(n=>{
+    if(!n.id) n.id = crypto.randomUUID();
+    if(typeof n.text !== 'string') n.text = n.text ? String(n.text) : '';
+    if(typeof n.note !== 'string') n.note = n.note || '';
+    if(!n.createdAt) n.createdAt = Date.now();
+  });
+  d.googleImportedIds = Array.isArray(d.googleImportedIds) ? d.googleImportedIds : [];
+  // migration: ensure every task has a dueDate, priority, subtasks
+  [...d.tasks, ...d.completedTasks].forEach(t=>{
+    if(!t.id) t.id = crypto.randomUUID();
+    if(typeof t.text !== 'string') t.text = t.text ? String(t.text) : '';
+    if(!t.dueDate) t.dueDate = dateOnly(t.createdAt || Date.now());
+    if(typeof t.note !== 'string') t.note = t.note || '';
+    if(!t.priority) t.priority = null;
+    if(!Array.isArray(t.subtasks)) t.subtasks = [];
+    if(typeof t.startTime !== 'string') t.startTime = (typeof t.time === 'string' && t.time) ? t.time : '';
+    if(typeof t.endTime !== 'string') t.endTime = '';
+    if(!t.createdAt) t.createdAt = Date.now();
+    if(t.googleEventId === undefined) t.googleEventId = null;
+  });
+  // migration: convert old single lastDoneDate to completedDates[] history
+  d.routines.forEach(r=>{
+    if(!r.id) r.id = crypto.randomUUID();
+    if(typeof r.text !== 'string') r.text = r.text ? String(r.text) : '';
+    if(!Array.isArray(r.completedDates)){
+      r.completedDates = r.lastDoneDate ? [r.lastDoneDate] : [];
+    }
+    if(typeof r.note !== 'string') r.note = r.note || '';
+    if(!Array.isArray(r.days)) r.days = [];
+    if(!r.priority) r.priority = null;
+    if(!Array.isArray(r.subtasks)) r.subtasks = [];
+    if(typeof r.startTime !== 'string') r.startTime = (typeof r.time === 'string' && r.time) ? r.time : '';
+    if(typeof r.endTime !== 'string') r.endTime = '';
+    if(!r.createdAt) r.createdAt = Date.now();
+    if(r.googleEventId === undefined) r.googleEventId = null;
+  });
+  // 미완료 할일이 오늘보다 과거 날짜에 남아있으면 오늘로 자동 이월
+  const today = todayStr();
+  d.tasks.forEach(t=>{
+    if(t.dueDate && t.dueDate < today) t.dueDate = today;
+  });
+  return d;
+}
+
+function loadData(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  let d = { tasks: [], completedTasks: [], routines: [], notes: [], googleImportedIds: [] };
+  if(raw){
+    try{ d = JSON.parse(raw); }catch(e){}
+  }
+  return normalizeData(d);
+}
+function saveData(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function deferOverdueTasks(){
+  const today = todayStr();
+  let changed = false;
+  data.tasks.forEach(t=>{
+    if(t.dueDate && t.dueDate < today){
+      t.dueDate = today;
+      changed = true;
+    }
+  });
+  if(changed) saveData();
+  return changed;
+}
+
+let data = loadData();
+let currentView = 'tasks'; // 'tasks' | 'routines' | 'calendar'
+let archiveOpen = false;
+let calMode = 'month'; // 'year' | 'month' | 'week' | 'day'
+let calDate = new Date();
+let searchQuery = '';
+
+const listEl = document.getElementById('list');
+const emptyEl = document.getElementById('empty-msg');
+const searchBox = document.getElementById('search-box');
+const searchInput = document.getElementById('search-input');
+const exportBtn = document.getElementById('export-btn');
+const importBtn = document.getElementById('import-btn');
+const importFile = document.getElementById('import-file');
+
+exportBtn.addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `todo-backup-${todayStr()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+importBtn.addEventListener('click', ()=>{
+  importFile.value = '';
+  importFile.click();
+});
+
+importFile.addEventListener('change', ()=>{
+  const file = importFile.files && importFile.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    let parsed;
+    try{
+      parsed = JSON.parse(reader.result);
+    }catch(e){
+      alert('올바른 JSON 파일이 아니에요.');
+      return;
+    }
+    if(!parsed || typeof parsed !== 'object' || (!Array.isArray(parsed.tasks) && !Array.isArray(parsed.routines) && !Array.isArray(parsed.notes))){
+      alert('할일 백업 파일 형식이 아니에요.');
+      return;
+    }
+    const ok = confirm('현재 데이터를 모두 덮어씁니다. 계속할까요? (미리 내보내기로 백업해두는 걸 추천해요)');
+    if(!ok) return;
+    closeDetail();
+    data = normalizeData(parsed);
+    saveData();
+    render();
+    alert('가져오기가 완료되었어요.');
+  };
+  reader.readAsText(file);
+});
+
+/* ---------- Google Calendar Sync ---------- */
+const GOOGLE_CONFIG_KEY = 'mytodo-google-config-v1';
+const GOOGLE_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+const GOOGLE_PULL_DAYS_PAST = 14;
+const GOOGLE_PULL_DAYS_FUTURE = 90;
+
+const googleSyncBox = document.getElementById('google-sync-box');
+const googleSyncStatusEl = document.getElementById('google-sync-status');
+const googleConnectBtn = document.getElementById('google-connect-btn');
+const googleSyncNowBtn = document.getElementById('google-sync-now-btn');
+const googleDisconnectBtn = document.getElementById('google-disconnect-btn');
+const googleSettingsToggle = document.getElementById('google-settings-toggle');
+const googleSettingsPanel = document.getElementById('google-settings-panel');
+const googleClientIdInput = document.getElementById('google-client-id-input');
+const googleFileWarning = document.getElementById('google-file-warning');
+
+function loadGoogleConfig(){
+  let cfg = { clientId:'', pendingDeletes:[] };
+  try{
+    const raw = localStorage.getItem(GOOGLE_CONFIG_KEY);
+    if(raw) cfg = Object.assign(cfg, JSON.parse(raw));
+  }catch(e){}
+  if(!Array.isArray(cfg.pendingDeletes)) cfg.pendingDeletes = [];
+  if(typeof cfg.clientId !== 'string') cfg.clientId = '';
+  return cfg;
+}
+function saveGoogleConfig(){
+  localStorage.setItem(GOOGLE_CONFIG_KEY, JSON.stringify(googleConfig));
+}
+
+let googleConfig = loadGoogleConfig();
+let googleAccessToken = null;
+let googleTokenClient = null;
+let googleSyncing = false;
+let googleAutoSyncTimer = null;
+
+function updateGoogleUI(){
+  googleClientIdInput.value = googleConfig.clientId || '';
+  const connected = !!googleAccessToken;
+  googleSyncStatusEl.textContent = connected ? '연결됨' : '연결 안됨';
+  googleSyncStatusEl.classList.toggle('connected', connected);
+  googleConnectBtn.style.display = connected ? 'none' : 'inline-flex';
+  googleSyncNowBtn.style.display = connected ? 'inline-flex' : 'none';
+  googleDisconnectBtn.style.display = connected ? 'inline-flex' : 'none';
+  googleFileWarning.style.display = (location.protocol === 'file:') ? 'block' : 'none';
+}
+
+function initGoogleAuth(){
+  if(!window.google || !google.accounts || !google.accounts.oauth2 || !googleConfig.clientId) return;
+  googleTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: googleConfig.clientId,
+    scope: GOOGLE_SCOPE,
+    callback: (resp)=>{
+      if(resp && resp.access_token){
+        googleAccessToken = resp.access_token;
+        updateGoogleUI();
+        syncWithGoogle();
+        scheduleAutoSync();
+      }
+    }
+  });
+}
+
+googleClientIdInput.addEventListener('change', ()=>{
+  googleConfig.clientId = googleClientIdInput.value.trim();
+  saveGoogleConfig();
+  googleTokenClient = null;
+  initGoogleAuth();
+});
+
+googleSettingsToggle.addEventListener('click', ()=>{
+  const open = googleSettingsPanel.style.display !== 'none';
+  googleSettingsPanel.style.display = open ? 'none' : 'block';
+});
+
+googleConnectBtn.addEventListener('click', ()=>{
+  if(location.protocol === 'file:'){
+    alert('이 파일을 file://로 열면 구글 로그인이 동작하지 않아요.\n로컬 서버(예: python -m http.server)로 열어서 http://localhost 주소로 접속한 뒤 다시 시도해주세요.');
+    return;
+  }
+  if(!googleConfig.clientId){
+    alert('먼저 아래 "연동 설정"에서 OAuth 클라이언트 ID를 입력해주세요.');
+    googleSettingsPanel.style.display = 'block';
+    return;
+  }
+  if(!googleTokenClient) initGoogleAuth();
+  if(googleTokenClient) googleTokenClient.requestAccessToken({ prompt: googleAccessToken ? '' : 'consent' });
+  else alert('구글 로그인 스크립트를 아직 불러오는 중이에요. 잠시 후 다시 시도해주세요.');
+});
+
+googleDisconnectBtn.addEventListener('click', ()=>{
+  if(googleAccessToken && window.google && google.accounts && google.accounts.oauth2){
+    google.accounts.oauth2.revoke(googleAccessToken, ()=>{});
+  }
+  googleAccessToken = null;
+  clearTimeout(googleAutoSyncTimer);
+  updateGoogleUI();
+});
+
+googleSyncNowBtn.addEventListener('click', ()=>syncWithGoogle());
+
+function scheduleAutoSync(){
+  clearTimeout(googleAutoSyncTimer);
+  googleAutoSyncTimer = setTimeout(()=>{
+    if(googleAccessToken){ syncWithGoogle(); scheduleAutoSync(); }
+  }, 5*60*1000);
+}
+
+async function googleApiFetch(path, options){
+  options = options || {};
+  options.headers = Object.assign({ 'Authorization': 'Bearer ' + googleAccessToken, 'Content-Type':'application/json' }, options.headers||{});
+  const res = await fetch('https://www.googleapis.com/calendar/v3/' + path, options);
+  if(res.status === 401){
+    googleAccessToken = null;
+    updateGoogleUI();
+    throw Object.assign(new Error('unauthorized'), { status:401 });
+  }
+  if(res.status === 204) return null;
+  const text = await res.text();
+  let json = null;
+  try{ json = text ? JSON.parse(text) : null; }catch(e){}
+  if(!res.ok){
+    const err = new Error((json && json.error && json.error.message) || res.statusText);
+    err.status = res.status;
+    err.body = json;
+    throw err;
+  }
+  return json;
+}
+
+function toGoogleEventBody(item, isRoutine){
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const body = { summary: item.text || '(제목 없음)', description: item.note || '' };
+  if(isRoutine){
+    const start = dateOnly(item.createdAt || Date.now());
+    if(item.startTime && item.endTime){
+      body.start = { dateTime: `${start}T${item.startTime}:00`, timeZone: tz };
+      body.end = { dateTime: `${start}T${item.endTime}:00`, timeZone: tz };
+    }else{
+      body.start = { date: start };
+      body.end = { date: addDays(start,1) };
+    }
+    const days = item.days || [];
+    if(days.length){
+      const byday = days.map(d=>['SU','MO','TU','WE','TH','FR','SA'][d]);
+      body.recurrence = [`RRULE:FREQ=WEEKLY;BYDAY=${byday.join(',')}`];
+    }else{
+      body.recurrence = ['RRULE:FREQ=DAILY'];
+    }
+  }else{
+    const d = item.dueDate || todayStr();
+    if(item.startTime){
+      const endT = item.endTime || item.startTime;
+      body.start = { dateTime: `${d}T${item.startTime}:00`, timeZone: tz };
+      body.end = { dateTime: `${d}T${endT}:00`, timeZone: tz };
+    }else{
+      body.start = { date: d };
+      body.end = { date: addDays(d,1) };
+    }
+  }
+  return body;
+}
+
+function googleSyncSnapshot(item, isRoutine){
+  return JSON.stringify(isRoutine
+    ? [item.text, item.note, item.startTime, item.endTime, (item.days||[]).slice().sort().join(',')]
+    : [item.text, item.note, item.dueDate, item.startTime, item.endTime]);
+}
+
+async function pushItem(item, isRoutine){
+  const snap = googleSyncSnapshot(item, isRoutine);
+  if(item.googleEventId){
+    if(item._googleSnap === snap) return;
+    try{
+      await googleApiFetch(`calendars/primary/events/${item.googleEventId}`, { method:'PATCH', body: JSON.stringify(toGoogleEventBody(item, isRoutine)) });
+      item._googleSnap = snap;
+    }catch(e){
+      if(e.status === 404 || e.status === 410){ item.googleEventId = null; item._googleSnap = null; }
+    }
+  }else{
+    try{
+      const created = await googleApiFetch('calendars/primary/events', { method:'POST', body: JSON.stringify(toGoogleEventBody(item, isRoutine)) });
+      if(created && created.id){ item.googleEventId = created.id; item._googleSnap = snap; }
+    }catch(e){ /* network/API error — retry on next sync */ }
+  }
+}
+
+async function processPendingDeletes(){
+  const remaining = [];
+  for(const id of googleConfig.pendingDeletes){
+    try{ await googleApiFetch(`calendars/primary/events/${id}`, { method:'DELETE' }); }
+    catch(e){ if(e.status !== 404 && e.status !== 410 && e.status !== 401) remaining.push(id); }
+  }
+  googleConfig.pendingDeletes = remaining;
+  saveGoogleConfig();
+}
+
+async function pullGoogleEvents(){
+  const timeMin = new Date(Date.now() - GOOGLE_PULL_DAYS_PAST*86400000).toISOString();
+  const timeMax = new Date(Date.now() + GOOGLE_PULL_DAYS_FUTURE*86400000).toISOString();
+  const knownIds = new Set();
+  data.tasks.forEach(t=>{ if(t.googleEventId) knownIds.add(t.googleEventId); });
+  data.completedTasks.forEach(t=>{ if(t.googleEventId) knownIds.add(t.googleEventId); });
+  data.routines.forEach(r=>{ if(r.googleEventId) knownIds.add(r.googleEventId); });
+  data.googleImportedIds = data.googleImportedIds || [];
+  let pageToken = null;
+  do{
+    const params = new URLSearchParams({ timeMin, timeMax, singleEvents:'true', orderBy:'startTime', maxResults:'250' });
+    if(pageToken) params.set('pageToken', pageToken);
+    const res = await googleApiFetch('calendars/primary/events?' + params.toString());
+    (res.items||[]).forEach(ev=>{
+      if(ev.status === 'cancelled') return;
+      if(knownIds.has(ev.id)) return;
+      if(data.googleImportedIds.includes(ev.id)) return;
+      const dateStr = (ev.start && (ev.start.date || (ev.start.dateTime||'').slice(0,10))) || todayStr();
+      const startTime = ev.start && ev.start.dateTime ? ev.start.dateTime.slice(11,16) : '';
+      const endTime = ev.end && ev.end.dateTime ? ev.end.dateTime.slice(11,16) : '';
+      const task = { id: crypto.randomUUID(), text: ev.summary || '(제목 없음)', done:false, note: ev.description||'', priority:null, subtasks:[], startTime, endTime, dueDate: dateStr, createdAt: Date.now(), googleEventId: ev.id };
+      task._googleSnap = googleSyncSnapshot(task, false);
+      data.tasks.push(task);
+      data.googleImportedIds.push(ev.id);
+      knownIds.add(ev.id);
+    });
+    pageToken = res.nextPageToken;
+  }while(pageToken);
+}
+
+async function syncWithGoogle(){
+  if(!googleAccessToken || googleSyncing) return;
+  googleSyncing = true;
+  googleSyncStatusEl.textContent = '동기화 중...';
+  try{
+    await processPendingDeletes();
+    for(const t of data.tasks) await pushItem(t, false);
+    for(const r of data.routines) await pushItem(r, true);
+    await pullGoogleEvents();
+    saveData();
+    render();
+  }catch(e){
+    console.error('Google Calendar sync error', e);
+  }finally{
+    googleSyncing = false;
+    updateGoogleUI();
+  }
+}
+
+updateGoogleUI();
+if(googleConfig.clientId){
+  const waitGis = setInterval(()=>{
+    if(window.google && google.accounts && google.accounts.oauth2){
+      clearInterval(waitGis);
+      initGoogleAuth();
+    }
+  }, 300);
+}
+
+const addInput = document.getElementById('add-input');
+const addBox = document.getElementById('add-box');
+const addBtn = document.getElementById('add-btn');
+const addDateBtn = document.getElementById('add-date-btn');
+const addDateInput = document.getElementById('add-date-input');
+const addDateLabel = document.getElementById('add-date-label');
+const viewTitle = document.getElementById('view-title');
+const archiveToggle = document.getElementById('archive-toggle');
+const archiveListEl = document.getElementById('archive-list');
+const archiveArrow = document.getElementById('archive-arrow');
+const archiveLabel = document.getElementById('archive-label');
+const calendarViewEl = document.getElementById('calendar-view');
+const calGrid = document.getElementById('cal-grid');
+const calPeriodLabel = document.getElementById('cal-period-label');
+const calPrevBtn = document.getElementById('cal-prev');
+const calNextBtn = document.getElementById('cal-next');
+const calTodayBtn = document.getElementById('cal-today');
+const calModeSwitch = document.getElementById('cal-mode-switch');
+const detailPanel = document.getElementById('detail-panel');
+const detailTitleInput = document.getElementById('detail-title-input');
+const detailNote = document.getElementById('detail-note');
+const detailClose = document.getElementById('detail-close');
+const detailDateRow = document.getElementById('detail-date-row');
+const detailDate = document.getElementById('detail-date');
+const detailStartTimeBtn = document.getElementById('detail-start-time-btn');
+const detailEndTimeBtn = document.getElementById('detail-end-time-btn');
+const timePickerOverlay = document.getElementById('time-picker-overlay');
+const timePickerTitleEl = document.getElementById('time-picker-title');
+const timePickerCloseEl = document.getElementById('time-picker-close');
+const wheelHourEl = document.getElementById('wheel-hour');
+const wheelMinuteEl = document.getElementById('wheel-minute');
+const wheelAmpmEl = document.getElementById('wheel-ampm');
+const timePickerClearBtn = document.getElementById('time-picker-clear-btn');
+const timePickerDoneBtn = document.getElementById('time-picker-done-btn');
+const timeBtnRow = document.getElementById('time-btn-row');
+const detailPriorityRow = document.getElementById('detail-priority-row');
+const detailDaysRow = document.getElementById('detail-days-row');
+const detailSubtaskSection = document.getElementById('detail-subtask-section');
+const detailSubtaskProgress = document.getElementById('detail-subtask-progress');
+const detailSubtaskList = document.getElementById('detail-subtask-list');
+const detailSubtaskInput = document.getElementById('detail-subtask-input');
+
+let detailId = null;
+let detailView = null; // 'tasks' | 'routines' | 'completed'
+
+function detailArray(view){
+  if(view === 'tasks') return data.tasks;
+  if(view === 'routines') return data.routines;
+  if(view === 'completed') return data.completedTasks;
+  if(view === 'notes') return data.notes;
+  return [];
+}
+
+function getDetailItem(){
+  if(!detailId) return null;
+  return detailArray(detailView).find(x=>x.id===detailId) || null;
+}
+
+function subtaskProgress(item){
+  if(!item.subtasks || !item.subtasks.length) return null;
+  const done = item.subtasks.filter(s=>s.done).length;
+  return { done, total: item.subtasks.length, percent: Math.round(done / item.subtasks.length * 100) };
+}
+
+function renderSubtaskList(){
+  const item = getDetailItem();
+  if(!item){ detailSubtaskList.innerHTML=''; detailSubtaskProgress.textContent=''; return; }
+  item.subtasks = item.subtasks || [];
+  const prog = subtaskProgress(item);
+  detailSubtaskProgress.textContent = prog ? `${prog.done}/${prog.total} 완료 · ${prog.percent}%` : '항목을 추가해보세요';
+  detailSubtaskList.innerHTML = '';
+  item.subtasks.forEach(s=>{
+    const row = document.createElement('div');
+    row.className = 'detail-subtask-row' + (s.done ? ' done' : '');
+    row.innerHTML = `
+      <div class="checkbox ${s.done?'checked':''}"></div>
+      <div class="item-text">${escapeHtml(s.text)}</div>
+      <div class="detail-subtask-del">✕</div>
+    `;
+    row.querySelector('.checkbox').addEventListener('click', ()=>{
+      s.done = !s.done;
+      saveData();
+      renderSubtaskList();
+      render();
+    });
+    row.querySelector('.detail-subtask-del').addEventListener('click', ()=>{
+      item.subtasks = item.subtasks.filter(x=>x.id!==s.id);
+      saveData();
+      renderSubtaskList();
+      render();
+    });
+    detailSubtaskList.appendChild(row);
+  });
+}
+
+detailSubtaskInput.addEventListener('keydown', (e)=>{
+  if(e.key !== 'Enter') return;
+  const item = getDetailItem();
+  const text = detailSubtaskInput.value.trim();
+  if(!item || !text) return;
+  item.subtasks = item.subtasks || [];
+  item.subtasks.push({ id: crypto.randomUUID(), text, done:false });
+  detailSubtaskInput.value = '';
+  saveData();
+  renderSubtaskList();
+  render();
+});
+
+detailPriorityRow.querySelectorAll('.priority-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const item = getDetailItem();
+    if(!item) return;
+    item.priority = btn.dataset.p || null;
+    detailPriorityRow.querySelectorAll('.priority-btn').forEach(b=>{
+      b.classList.toggle('active', (b.dataset.p||null) === item.priority);
+    });
+    saveData();
+    render();
+  });
+});
+
+detailDaysRow.querySelectorAll('.day-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const item = getDetailItem();
+    if(!item) return;
+    item.days = item.days || [];
+    const day = parseInt(btn.dataset.day);
+    const idx = item.days.indexOf(day);
+    if(idx===-1) item.days.push(day); else item.days.splice(idx,1);
+    btn.classList.toggle('active');
+    saveData();
+    render();
+  });
+});
+
+function openDetail(id, view){
+  const item = detailArray(view).find(x=>x.id===id);
+  if(!item) return;
+  detailId = id;
+  detailView = view;
+  detailTitleInput.value = item.text;
+  detailNote.value = item.note || '';
+
+  const isNote = (view === 'notes');
+  const showDate = (view === 'tasks' || view === 'completed');
+  detailDateRow.style.display = showDate ? 'block' : 'none';
+  detailDate.value = showDate ? (item.dueDate || todayStr()) : '';
+
+  // 시작/종료 시간, 우선순위, 체크리스트는 메모를 제외한 할일/완료/루틴에서 사용 가능
+  timeBtnRow.style.display = isNote ? 'none' : 'flex';
+  if(!isNote){
+    item.startTime = item.startTime || '';
+    item.endTime = item.endTime || '';
+    syncDetailTimeButtons(item);
+  }
+
+  detailPriorityRow.style.display = isNote ? 'none' : 'flex';
+  if(!isNote){
+    item.priority = item.priority || null;
+    detailPriorityRow.querySelectorAll('.priority-btn').forEach(b=>{
+      b.classList.toggle('active', (b.dataset.p||null) === (item.priority||null));
+    });
+  }
+
+  const isRoutine = (view === 'routines');
+  detailDaysRow.style.display = isRoutine ? 'flex' : 'none';
+  if(isRoutine){
+    item.days = item.days || [];
+    detailDaysRow.querySelectorAll('.day-btn').forEach(b=>{
+      b.classList.toggle('active', item.days.includes(parseInt(b.dataset.day)));
+    });
+  }
+
+  detailSubtaskSection.style.display = isNote ? 'none' : 'block';
+  if(!isNote){
+    item.subtasks = item.subtasks || [];
+    renderSubtaskList();
+  }
+
+  detailPanel.classList.add('open');
+}
+
+function closeDetail(){
+  detailPanel.classList.remove('open');
+  detailId = null;
+  detailView = null;
+}
+
+detailClose.addEventListener('click', closeDetail);
+
+detailTitleInput.addEventListener('input', ()=>{
+  const item = getDetailItem();
+  if(!item) return;
+  item.text = detailTitleInput.value;
+  saveData();
+});
+detailTitleInput.addEventListener('blur', ()=>{ render(); });
+
+detailNote.addEventListener('input', ()=>{
+  const item = getDetailItem();
+  if(!item) return;
+  item.note = detailNote.value;
+  saveData();
+});
+
+detailDate.addEventListener('change', ()=>{
+  const item = getDetailItem();
+  if(!item || !detailDate.value) return;
+  item.dueDate = detailDate.value;
+  saveData();
+  render();
+});
+
+function syncDetailTimeButtons(item){
+  item = item || getDetailItem();
+  if(!item) return;
+  detailStartTimeBtn.textContent = item.startTime ? formatTime12(item.startTime) : '시간 선택';
+  detailStartTimeBtn.classList.toggle('unset', !item.startTime);
+  detailEndTimeBtn.textContent = item.endTime ? formatTime12(item.endTime) : '시간 선택';
+  detailEndTimeBtn.classList.toggle('unset', !item.endTime);
+}
+
+detailStartTimeBtn.addEventListener('click', ()=>{
+  const item = getDetailItem();
+  if(!item) return;
+  openTimePicker(item, 'startTime', '시작 시간');
+});
+detailEndTimeBtn.addEventListener('click', ()=>{
+  const item = getDetailItem();
+  if(!item) return;
+  openTimePicker(item, 'endTime', '종료 시간');
+});
+
+/* ---------- iPhone-style rolling time picker ---------- */
+const WHEEL_ITEM_H = 32;
+const WHEEL_PAD = 2;
+const WHEEL_HOURS = Array.from({length:12}, (_,i)=>({ value:i+1, label:String(i+1) }));
+const WHEEL_MINUTES = Array.from({length:60}, (_,i)=>({ value:i, label:String(i).padStart(2,'0') }));
+const WHEEL_AMPM = [{ value:'AM', label:'오전' }, { value:'PM', label:'오후' }];
+
+let timePickerItem = null;
+let timePickerField = null;
+let wheelState = { hour:9, minute:0, ampm:'AM' };
+
+function buildWheel(container, items, selectedIndex, onSettle){
+  container.innerHTML = '';
+  for(let i=0;i<WHEEL_PAD;i++){
+    const sp = document.createElement('div');
+    sp.className = 'wheel-spacer';
+    container.appendChild(sp);
+  }
+  items.forEach((it,idx)=>{
+    const el = document.createElement('div');
+    el.className = 'wheel-item';
+    el.textContent = it.label;
+    el.dataset.index = idx;
+    el.addEventListener('click', ()=>{
+      container.scrollTo({ top: idx*WHEEL_ITEM_H, behavior:'smooth' });
+    });
+    container.appendChild(el);
+  });
+  for(let i=0;i<WHEEL_PAD;i++){
+    const sp = document.createElement('div');
+    sp.className = 'wheel-spacer';
+    container.appendChild(sp);
+  }
+
+  function updateSelected(){
+    const idx = Math.max(0, Math.min(items.length-1, Math.round(container.scrollTop / WHEEL_ITEM_H)));
+    container.querySelectorAll('.wheel-item').forEach(el=>el.classList.remove('selected'));
+    const sel = container.querySelector(`.wheel-item[data-index="${idx}"]`);
+    if(sel) sel.classList.add('selected');
+    return idx;
+  }
+
+  let scrollTimer = null;
+  container.addEventListener('scroll', ()=>{
+    updateSelected();
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(()=>{
+      const idx = updateSelected();
+      onSettle(items[idx].value);
+    }, 120);
+  });
+
+  container.scrollTop = selectedIndex * WHEEL_ITEM_H;
+  updateSelected();
+}
+
+function to24Hour(h12, ampm){
+  let h = h12 % 12;
+  if(ampm === 'PM') h += 12;
+  return h;
+}
+
+function openTimePicker(item, field, titleText){
+  timePickerItem = item;
+  timePickerField = field;
+  timePickerTitleEl.textContent = titleText;
+
+  const raw = item[field] || '';
+  let h24 = 9, min = 0;
+  if(raw){
+    const parts = raw.split(':').map(Number);
+    if(!isNaN(parts[0])) h24 = parts[0];
+    if(!isNaN(parts[1])) min = parts[1];
+  }
+  const ampmVal = h24 < 12 ? 'AM' : 'PM';
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+
+  wheelState = { hour: h12, minute: min, ampm: ampmVal };
+
+  buildWheel(wheelHourEl, WHEEL_HOURS, h12-1, v=>{ wheelState.hour = v; });
+  buildWheel(wheelMinuteEl, WHEEL_MINUTES, min, v=>{ wheelState.minute = v; });
+  buildWheel(wheelAmpmEl, WHEEL_AMPM, ampmVal==='AM'?0:1, v=>{ wheelState.ampm = v; });
+
+  timePickerOverlay.classList.add('open');
+}
+
+function closeTimePicker(){
+  timePickerOverlay.classList.remove('open');
+  timePickerItem = null;
+  timePickerField = null;
+}
+
+timePickerCloseEl.addEventListener('click', closeTimePicker);
+timePickerOverlay.addEventListener('click', (e)=>{
+  if(e.target === timePickerOverlay) closeTimePicker();
+});
+
+timePickerClearBtn.addEventListener('click', ()=>{
+  if(timePickerItem && timePickerField){
+    timePickerItem[timePickerField] = '';
+    saveData();
+    syncDetailTimeButtons(timePickerItem);
+    render();
+  }
+  closeTimePicker();
+});
+
+timePickerDoneBtn.addEventListener('click', ()=>{
+  if(timePickerItem && timePickerField){
+    const h24 = to24Hour(wheelState.hour, wheelState.ampm);
+    const val = `${String(h24).padStart(2,'0')}:${String(wheelState.minute).padStart(2,'0')}`;
+    timePickerItem[timePickerField] = val;
+    saveData();
+    syncDetailTimeButtons(timePickerItem);
+    render();
+  }
+  closeTimePicker();
+});
+
+document.addEventListener('click', (e)=>{
+  if(!detailPanel.classList.contains('open')) return;
+  if(detailPanel.contains(e.target)) return;
+  if(e.target.closest('.item-text')) return;
+  if(e.target.closest('.cal-chip')) return;
+  if(e.target.closest('.time-picker-overlay')) return;
+  closeDetail();
+});
+
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+
+const viewLabels = { tasks:'Tasks', routines:'Routines', calendar:'Calendar', notes:'Notes' };
+const addPlaceholders = {
+  tasks: 'Add a task and press Enter',
+  routines: 'Add a routine and press Enter',
+  notes: 'Add a note title and press Enter'
+};
+
+document.querySelectorAll('.nav-item').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    el.classList.add('active');
+    currentView = el.dataset.view;
+    viewTitle.textContent = viewLabels[currentView] || '';
+    addInput.placeholder = addPlaceholders[currentView] || '';
+
+    const isCal = currentView === 'calendar';
+    addBox.style.display = isCal ? 'none' : 'flex';
+    listEl.style.display = isCal ? 'none' : 'flex';
+    calendarViewEl.style.display = isCal ? 'flex' : 'none';
+    searchBox.style.display = isCal ? 'none' : 'flex';
+    addDateBtn.style.display = currentView === 'tasks' ? 'flex' : 'none';
+    if(isCal){
+      emptyEl.style.display = 'none';
+      archiveToggle.style.display = 'none';
+      archiveListEl.classList.remove('open');
+    }
+    archiveOpen = false;
+    render();
+  });
+});
+
+searchInput.addEventListener('input', ()=>{
+  searchQuery = searchInput.value.trim().toLowerCase();
+  render();
+});
+
+addInput.addEventListener('input', ()=>{
+  addBox.classList.toggle('filled', addInput.value.trim().length>0);
+});
+addInput.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') addItem();
+});
+addBtn.addEventListener('click', addItem);
+
+function openDatePicker(input){
+  if(typeof input.showPicker === 'function'){
+    try{ input.showPicker(); return; }catch(e){}
+  }
+  input.focus();
+  input.click();
+}
+
+let addDate = todayStr();
+addDateInput.value = addDate;
+addDateLabel.textContent = shortDateLabel(addDate);
+addDateBtn.addEventListener('click', (e)=>{
+  e.preventDefault();
+  e.stopPropagation();
+  openDatePicker(addDateInput);
+});
+addDateInput.addEventListener('click', (e)=>e.stopPropagation());
+addDateInput.addEventListener('change', ()=>{
+  if(!addDateInput.value) return;
+  addDate = addDateInput.value;
+  addDateLabel.textContent = shortDateLabel(addDate);
+});
+
+function addItem(){
+  const text = addInput.value.trim();
+  if(!text) return;
+  if(currentView === 'tasks'){
+    data.tasks.unshift({ id: crypto.randomUUID(), text, done:false, note:'', priority:null, subtasks:[], startTime:'', endTime:'', dueDate: addDate, createdAt: Date.now(), googleEventId:null });
+  }else if(currentView === 'routines'){
+    data.routines.unshift({ id: crypto.randomUUID(), text, completedDates:[], note:'', days:[], priority:null, subtasks:[], startTime:'', endTime:'', createdAt: Date.now(), googleEventId:null });
+  }else if(currentView === 'notes'){
+    data.notes.unshift({ id: crypto.randomUUID(), text, note:'', createdAt: Date.now() });
+  }
+  addInput.value = '';
+  addBox.classList.remove('filled');
+  saveData();
+  render();
+}
+
+function toggleTask(id){
+  const task = data.tasks.find(t=>t.id===id);
+  if(!task) return;
+  const itemEl = document.querySelector(`[data-id="${id}"]`);
+  task.done = true;
+  saveData();
+  if(itemEl){
+    itemEl.classList.add('checked');
+    itemEl.querySelector('.checkbox').classList.add('checked');
+    setTimeout(()=>{
+      itemEl.classList.add('leaving');
+      setTimeout(()=>{
+        data.tasks = data.tasks.filter(t=>t.id!==id);
+        data.completedTasks.unshift(task);
+        if(detailId === id) closeDetail();
+        saveData();
+        render();
+      }, 320);
+    }, 260);
+  }else{
+    render();
+  }
+}
+
+function deleteTask(id){
+  const t = data.tasks.find(x=>x.id===id);
+  if(t && t.googleEventId){ googleConfig.pendingDeletes.push(t.googleEventId); saveGoogleConfig(); }
+  data.tasks = data.tasks.filter(t=>t.id!==id);
+  if(detailId === id) closeDetail();
+  saveData();
+  render();
+}
+
+function toggleRoutine(id){
+  const r = data.routines.find(r=>r.id===id);
+  if(!r) return;
+  const today = todayStr();
+  r.completedDates = r.completedDates || [];
+  const idx = r.completedDates.indexOf(today);
+  if(idx===-1) r.completedDates.push(today); else r.completedDates.splice(idx,1);
+  saveData();
+  render();
+}
+
+function deleteRoutine(id){
+  const r = data.routines.find(x=>x.id===id);
+  if(r && r.googleEventId){ googleConfig.pendingDeletes.push(r.googleEventId); saveGoogleConfig(); }
+  data.routines = data.routines.filter(r=>r.id!==id);
+  if(detailId === id) closeDetail();
+  saveData();
+  render();
+}
+
+function deleteNote(id){
+  data.notes = data.notes.filter(n=>n.id!==id);
+  if(detailId === id) closeDetail();
+  saveData();
+  render();
+}
+
+const MOVE_TARGETS = [
+  { id: 'tasks', label: 'Tasks' },
+  { id: 'routines', label: 'Routines' }
+];
+
+function closeMoveMenu(){
+  const m = document.getElementById('move-menu');
+  if(m) m.remove();
+}
+
+function openMoveMenu(id, fromView, btnEl){
+  closeMoveMenu();
+  const menu = document.createElement('div');
+  menu.className = 'move-menu';
+  menu.id = 'move-menu';
+
+  const label = document.createElement('div');
+  label.className = 'move-menu-label';
+  label.textContent = 'Move to';
+  menu.appendChild(label);
+
+  MOVE_TARGETS.filter(v=>v.id!==fromView).forEach(v=>{
+    const opt = document.createElement('div');
+    opt.className = 'move-menu-item';
+    opt.textContent = v.label;
+    opt.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      moveItem(id, fromView, v.id);
+      closeMoveMenu();
+    });
+    menu.appendChild(opt);
+  });
+
+  document.body.appendChild(menu);
+  const rect = btnEl.getBoundingClientRect();
+  const menuRect = menu.getBoundingClientRect();
+  let left = rect.right - menuRect.width;
+  left = Math.max(8, Math.min(left, window.innerWidth - menuRect.width - 8));
+  menu.style.top = (rect.bottom + 6) + 'px';
+  menu.style.left = left + 'px';
+
+  setTimeout(()=>{
+    document.addEventListener('click', closeMoveMenu, { once:true });
+  }, 0);
+}
+
+function moveItem(id, fromView, toView){
+  if(!toView || toView===fromView) return;
+  const itemEl = document.querySelector(`[data-id="${id}"]`);
+  const finish = ()=>{
+    if(fromView === 'tasks'){
+      const idx = data.tasks.findIndex(t=>t.id===id);
+      if(idx===-1) return;
+      const [task] = data.tasks.splice(idx,1);
+      if(toView==='routines'){
+        if(task.googleEventId){ googleConfig.pendingDeletes.push(task.googleEventId); saveGoogleConfig(); }
+        data.routines.unshift({ id: task.id, text: task.text, completedDates:[], note: task.note||'', days:[], priority: task.priority||null, subtasks: task.subtasks||[], startTime: task.startTime||'', endTime: task.endTime||'', createdAt: task.createdAt, googleEventId:null });
+      }
+    }else{
+      const idx = data.routines.findIndex(r=>r.id===id);
+      if(idx===-1) return;
+      const [r] = data.routines.splice(idx,1);
+      if(toView==='tasks'){
+        if(r.googleEventId){ googleConfig.pendingDeletes.push(r.googleEventId); saveGoogleConfig(); }
+        data.tasks.unshift({ id: r.id, text: r.text, done:false, note: r.note||'', priority: r.priority||null, subtasks: r.subtasks||[], startTime: r.startTime||'', endTime: r.endTime||'', dueDate: todayStr(), createdAt: r.createdAt, googleEventId:null });
+      }
+    }
+    if(detailId === id) closeDetail();
+    saveData();
+    render();
+  };
+  if(itemEl){
+    itemEl.classList.add('leaving');
+    setTimeout(finish, 320);
+  }else{
+    finish();
+  }
+}
+
+function restoreTask(id){
+  const idx = data.completedTasks.findIndex(t=>t.id===id);
+  if(idx===-1) return;
+  const [task] = data.completedTasks.splice(idx,1);
+  task.done = false;
+  data.tasks.unshift(task);
+  if(detailId === id) closeDetail();
+  saveData();
+  render();
+}
+
+function deleteCompleted(id){
+  const t = data.completedTasks.find(x=>x.id===id);
+  if(t && t.googleEventId){ googleConfig.pendingDeletes.push(t.googleEventId); saveGoogleConfig(); }
+  data.completedTasks = data.completedTasks.filter(t=>t.id!==id);
+  if(detailId === id) closeDetail();
+  saveData();
+  render();
+}
+
+archiveToggle.addEventListener('click', ()=>{
+  archiveOpen = !archiveOpen;
+  render();
+});
+
+function render(){
+  if(detailId && !getDetailItem()) closeDetail();
+  document.getElementById('count-tasks').textContent = data.tasks.length;
+  document.getElementById('count-routines').textContent = data.routines.filter(r=>!(r.completedDates||[]).includes(todayStr())).length;
+  document.getElementById('count-notes').textContent = data.notes.length;
+
+  if(currentView === 'calendar'){
+    renderCalendar();
+    return;
+  }
+
+  listEl.innerHTML = '';
+
+  if(currentView === 'tasks'){
+    const visibleTasks = searchQuery ? data.tasks.filter(t=>t.text.toLowerCase().includes(searchQuery)) : data.tasks;
+    const visibleCompleted = searchQuery ? data.completedTasks.filter(t=>t.text.toLowerCase().includes(searchQuery)) : data.completedTasks;
+
+    archiveToggle.style.display = visibleCompleted.length ? 'flex' : 'none';
+    archiveLabel.textContent = `완료된 항목 (${visibleCompleted.length})`;
+    archiveArrow.textContent = archiveOpen ? '▾' : '▸';
+    archiveListEl.classList.toggle('open', archiveOpen);
+
+    if(visibleTasks.length === 0){
+      emptyEl.style.display = 'block';
+      emptyEl.textContent = searchQuery ? '검색 결과가 없어요.' : '할일이 없어요. 위에서 새로 추가해보세요.';
+    }else{
+      emptyEl.style.display = 'none';
+      visibleTasks.forEach(t=>{
+        const el = document.createElement('div');
+        el.className = 'item' + (t.priority ? ' priority-'+t.priority : '');
+        el.dataset.id = t.id;
+        const prog = subtaskProgress(t);
+        el.innerHTML = `
+          <div class="checkbox"></div>
+          <div class="item-text">${escapeHtml(t.text)}</div>
+          ${t.note && t.note.trim() ? '<span class="note-dot" title="메모 있음">📝</span>' : ''}
+          ${prog ? `<div class="item-progress" title="체크리스트 ${prog.done}/${prog.total}"><div class="item-progress-bar"><div class="item-progress-bar-fill" style="width:${prog.percent}%"></div></div>${prog.percent}%</div>` : ''}
+          <label class="item-tag item-date-tag" for="date-${t.id}" title="날짜를 눌러 다른 날로 이동">${shortDateLabel(t.dueDate)}</label>
+          <input type="date" id="date-${t.id}" class="item-date-input" value="${t.dueDate}">
+          <div class="item-tag item-time-tag" title="시간 설정">${formatTimeRange(t.startTime,t.endTime) ? '🕐 '+formatTimeRange(t.startTime,t.endTime) : '🕐'}</div>
+          <div class="item-move" title="다른 목록으로 보내기">⇄</div>
+          <div class="item-del">✕</div>
+        `;
+        el.querySelector('.checkbox').addEventListener('click', ()=>toggleTask(t.id));
+        el.querySelector('.item-text').addEventListener('click', ()=>openDetail(t.id, 'tasks'));
+        el.querySelector('.item-date-tag').addEventListener('click', (e)=>{
+          e.preventDefault();
+          e.stopPropagation();
+          openDatePicker(el.querySelector('.item-date-input'));
+        });
+        el.querySelector('.item-date-input').addEventListener('click', (e)=>e.stopPropagation());
+        el.querySelector('.item-date-input').addEventListener('change', (e)=>{
+          t.dueDate = e.target.value;
+          if(detailId === t.id) detailDate.value = t.dueDate;
+          saveData();
+          render();
+        });
+        el.querySelector('.item-time-tag').addEventListener('click', (e)=>{
+          e.stopPropagation();
+          openTimePicker(t, 'startTime', '시작 시간');
+        });
+        el.querySelector('.item-move').addEventListener('click', (e)=>{
+          e.stopPropagation();
+          openMoveMenu(t.id, 'tasks', e.currentTarget);
+        });
+        el.querySelector('.item-del').addEventListener('click', ()=>deleteTask(t.id));
+        listEl.appendChild(el);
+      });
+    }
+
+    archiveListEl.innerHTML = '';
+    visibleCompleted.forEach(t=>{
+      const el = document.createElement('div');
+      el.className = 'archive-item';
+      el.innerHTML = `
+        <div class="checkbox checked"></div>
+        <div class="item-text">${escapeHtml(t.text)}</div>
+        <span class="restore" data-action="restore">복원</span>
+        <span class="item-del" data-action="delete">✕</span>
+      `;
+      el.querySelector('.item-text').addEventListener('click', ()=>openDetail(t.id, 'completed'));
+      el.querySelector('[data-action="restore"]').addEventListener('click', ()=>restoreTask(t.id));
+      el.querySelector('[data-action="delete"]').addEventListener('click', ()=>deleteCompleted(t.id));
+      archiveListEl.appendChild(el);
+    });
+
+  }else if(currentView === 'routines'){
+    archiveToggle.style.display = 'none';
+    archiveListEl.classList.remove('open');
+
+    const visibleRoutines = searchQuery ? data.routines.filter(r=>r.text.toLowerCase().includes(searchQuery)) : data.routines;
+    if(visibleRoutines.length === 0){
+      emptyEl.style.display = 'block';
+      emptyEl.textContent = searchQuery ? '검색 결과가 없어요.' : '루틴을 추가해보세요. 삭제하지 않는 한 매일 이어집니다.';
+    }else{
+      emptyEl.style.display = 'none';
+      const today = todayStr();
+      visibleRoutines.forEach(r=>{
+        const done = (r.completedDates||[]).includes(today);
+        const el = document.createElement('div');
+        el.className = 'item' + (done ? ' checked' : '') + (r.priority ? ' priority-'+r.priority : '');
+        el.dataset.id = r.id;
+        const prog = subtaskProgress(r);
+        el.innerHTML = `
+          <div class="checkbox ${done?'checked':''}"></div>
+          <div class="item-text">${escapeHtml(r.text)}</div>
+          ${r.note && r.note.trim() ? '<span class="note-dot" title="메모 있음">📝</span>' : ''}
+          ${prog ? `<div class="item-progress" title="체크리스트 ${prog.done}/${prog.total}"><div class="item-progress-bar"><div class="item-progress-bar-fill" style="width:${prog.percent}%"></div></div>${prog.percent}%</div>` : ''}
+          <div class="item-tag">${routineScheduleLabel(r)}</div>
+          <div class="item-tag item-time-tag" title="시간 설정">${formatTimeRange(r.startTime,r.endTime) ? '🕐 '+formatTimeRange(r.startTime,r.endTime) : '🕐'}</div>
+          <div class="item-move" title="다른 목록으로 보내기">⇄</div>
+          <div class="item-del">✕</div>
+        `;
+        el.querySelector('.checkbox').addEventListener('click', ()=>toggleRoutine(r.id));
+        el.querySelector('.item-text').addEventListener('click', ()=>openDetail(r.id, 'routines'));
+        el.querySelector('.item-time-tag').addEventListener('click', (e)=>{
+          e.stopPropagation();
+          openTimePicker(r, 'startTime', '시작 시간');
+        });
+        el.querySelector('.item-move').addEventListener('click', (e)=>{
+          e.stopPropagation();
+          openMoveMenu(r.id, 'routines', e.currentTarget);
+        });
+        el.querySelector('.item-del').addEventListener('click', ()=>deleteRoutine(r.id));
+        listEl.appendChild(el);
+      });
+    }
+  }else if(currentView === 'notes'){
+    archiveToggle.style.display = 'none';
+    archiveListEl.classList.remove('open');
+
+    const visibleNotes = searchQuery ? data.notes.filter(n=>n.text.toLowerCase().includes(searchQuery) || n.note.toLowerCase().includes(searchQuery)) : data.notes;
+    if(visibleNotes.length === 0){
+      emptyEl.style.display = 'block';
+      emptyEl.textContent = searchQuery ? '검색 결과가 없어요.' : '메모를 추가해보세요.';
+    }else{
+      emptyEl.style.display = 'none';
+      visibleNotes.forEach(n=>{
+        const el = document.createElement('div');
+        el.className = 'item note-item';
+        el.dataset.id = n.id;
+        const preview = (n.note || '').trim();
+        el.innerHTML = `
+          <div class="note-item-body">
+            <div class="item-text">${escapeHtml(n.text)}</div>
+            ${preview ? `<div class="note-preview">${escapeHtml(preview)}</div>` : ''}
+          </div>
+          <div class="item-del">✕</div>
+        `;
+        el.querySelector('.item-text').addEventListener('click', ()=>openDetail(n.id, 'notes'));
+        el.querySelector('.note-item-body').addEventListener('click', (e)=>{
+          if(e.target.classList.contains('item-text')) return;
+          openDetail(n.id, 'notes');
+        });
+        el.querySelector('.item-del').addEventListener('click', ()=>deleteNote(n.id));
+        listEl.appendChild(el);
+      });
+    }
+  }
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ---------- Calendar ---------- */
+const WEEKDAY_LABELS = ['일','월','화','수','목','금','토'];
+const CHIP_COLORS = ['#7C6A58','#3F6E6A','#37477A','#6E5A3E','#8A4A5C','#4A5A3E','#5C4A7A','#3E5A78','#7A5A3E','#5A3E4A','#3E6E5A','#6E4A3E'];
+function chipColor(id){
+  let hash = 0;
+  for(let i=0;i<id.length;i++) hash = (hash*31 + id.charCodeAt(i)) >>> 0;
+  return CHIP_COLORS[hash % CHIP_COLORS.length];
+}
+
+function getItemsForDate(dateStr){
+  const items = [];
+  data.tasks.forEach(t=>{
+    if(t.dueDate === dateStr) items.push({ id:t.id, text:t.text, kind:'task', done:false, startTime:t.startTime||'', endTime:t.endTime||'' });
+  });
+  data.completedTasks.forEach(t=>{
+    if(t.dueDate === dateStr) items.push({ id:t.id, text:t.text, kind:'completed', done:true, startTime:t.startTime||'', endTime:t.endTime||'' });
+  });
+  data.routines.forEach(r=>{
+    const start = dateOnly(r.createdAt || Date.now());
+    const days = r.days || [];
+    const weekday = new Date(dateStr+'T00:00:00').getDay();
+    const scheduledToday = days.length === 0 || days.includes(weekday);
+    if(dateStr >= start && scheduledToday){
+      const done = (r.completedDates||[]).includes(dateStr);
+      items.push({ id:r.id, text:r.text, kind:'routine', done, startTime:r.startTime||'', endTime:r.endTime||'' });
+    }
+  });
+  return items;
+}
+
+function calItemClick(item){
+  if(item.kind === 'task') openDetail(item.id, 'tasks');
+  else if(item.kind === 'completed') openDetail(item.id, 'completed');
+  else openDetail(item.id, 'routines');
+}
+
+function calToggleItem(item, dateStr){
+  if(item.kind === 'task'){
+    const idx = data.tasks.findIndex(t=>t.id===item.id);
+    if(idx===-1) return;
+    const [task] = data.tasks.splice(idx,1);
+    task.done = true;
+    data.completedTasks.unshift(task);
+    if(detailId===item.id) closeDetail();
+  }else if(item.kind === 'completed'){
+    const idx = data.completedTasks.findIndex(t=>t.id===item.id);
+    if(idx===-1) return;
+    const [task] = data.completedTasks.splice(idx,1);
+    task.done = false;
+    data.tasks.unshift(task);
+  }else{
+    const r = data.routines.find(r=>r.id===item.id);
+    if(!r) return;
+    r.completedDates = r.completedDates || [];
+    const idx = r.completedDates.indexOf(dateStr);
+    if(idx===-1) r.completedDates.push(dateStr); else r.completedDates.splice(idx,1);
+  }
+  saveData();
+  renderCalendar();
+}
+
+function setCalMode(mode){
+  calMode = mode;
+  renderCalendar();
+}
+
+calModeSwitch.querySelectorAll('.cal-mode-btn').forEach(b=>{
+  b.addEventListener('click', ()=>setCalMode(b.dataset.mode));
+});
+calTodayBtn.addEventListener('click', ()=>{
+  calDate = new Date();
+  renderCalendar();
+});
+calPrevBtn.addEventListener('click', ()=>calShift(-1));
+calNextBtn.addEventListener('click', ()=>calShift(1));
+
+function calShift(dir){
+  const d = new Date(calDate);
+  if(calMode === 'year') d.setFullYear(d.getFullYear()+dir);
+  else if(calMode === 'month') d.setMonth(d.getMonth()+dir);
+  else if(calMode === 'week') d.setDate(d.getDate()+dir*7);
+  else d.setDate(d.getDate()+dir);
+  calDate = d;
+  renderCalendar();
+}
+
+function renderCalendar(){
+  calModeSwitch.querySelectorAll('.cal-mode-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.mode === calMode);
+  });
+  if(calMode === 'year') renderCalYear();
+  else if(calMode === 'month') renderCalMonth();
+  else if(calMode === 'week') renderCalWeek();
+  else renderCalDay();
+}
+
+function moveItemToDate(id, kind, dateStr){
+  if(kind === 'routine') return; // routines recur daily, not date-bound
+  const arr = kind === 'completed' ? data.completedTasks : data.tasks;
+  const item = arr.find(x=>x.id===id);
+  if(!item || item.dueDate === dateStr) return;
+  item.dueDate = dateStr;
+  if(detailId === id) detailDate.value = dateStr;
+  saveData();
+  renderCalendar();
+}
+
+function bindCalGridEvents(){
+  calGrid.querySelectorAll('.cal-day-cell').forEach(cell=>{
+    cell.addEventListener('click', (e)=>{
+      if(e.target.closest('.cal-chip')) return;
+      calDate = new Date(cell.dataset.date+'T00:00:00');
+      setCalMode('day');
+    });
+    cell.addEventListener('dragover', (e)=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      cell.classList.add('drag-over');
+    });
+    cell.addEventListener('dragleave', ()=>{
+      cell.classList.remove('drag-over');
+    });
+    cell.addEventListener('drop', (e)=>{
+      e.preventDefault();
+      cell.classList.remove('drag-over');
+      let payload;
+      try{ payload = JSON.parse(e.dataTransfer.getData('text/plain')); }catch(err){ return; }
+      if(!payload || !payload.id) return;
+      moveItemToDate(payload.id, payload.kind, cell.dataset.date);
+    });
+  });
+  calGrid.querySelectorAll('.cal-chip').forEach(chip=>{
+    chip.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      calItemClick({ id: chip.dataset.id, kind: chip.dataset.kind });
+    });
+    if(chip.dataset.kind !== 'routine'){
+      chip.draggable = true;
+      chip.addEventListener('dragstart', (e)=>{
+        e.stopPropagation();
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', JSON.stringify({ id: chip.dataset.id, kind: chip.dataset.kind }));
+        setTimeout(()=>chip.classList.add('dragging'), 0);
+      });
+      chip.addEventListener('dragend', ()=>{
+        chip.classList.remove('dragging');
+      });
+    }
+  });
+}
+
+function renderChip(it){
+  const bg = chipColor(it.id);
+  const draggableAttr = it.kind !== 'routine' ? 'draggable="true"' : '';
+  return `<div class="cal-chip ${it.done?'done':''}" data-id="${it.id}" data-kind="${it.kind}" ${draggableAttr} style="background:${bg};">
+    <span class="chip-check">${it.done ? '✓' : ''}</span>
+    <span class="cal-chip-text">${escapeHtml(it.text)}</span>
+  </div>`;
+}
+
+function renderCalMonth(){
+  const y = calDate.getFullYear(), m = calDate.getMonth();
+  calPeriodLabel.textContent = `${y}년 ${m+1}월`;
+  const firstOfMonth = new Date(y, m, 1);
+  const startOffset = firstOfMonth.getDay();
+  const gridStart = new Date(y, m, 1 - startOffset);
+  const today = todayStr();
+
+  let html = '<div class="cal-week-header">' + WEEKDAY_LABELS.map(w=>`<div>${w}</div>`).join('') + '</div>';
+  html += '<div class="cal-month-grid">';
+  for(let i=0;i<42;i++){
+    const cellDate = new Date(gridStart);
+    cellDate.setDate(gridStart.getDate()+i);
+    const dateStr = formatDate(cellDate);
+    const inMonth = cellDate.getMonth() === m;
+    const isToday = dateStr === today;
+    const items = getItemsForDate(dateStr);
+    html += `<div class="cal-day-cell ${inMonth?'':'out'} ${isToday?'today':''}" data-date="${dateStr}">
+      <div class="cal-day-num">${cellDate.getDate()}</div>
+      ${items.map(it=>renderChip(it)).join('')}
+    </div>`;
+  }
+  html += '</div>';
+  calGrid.innerHTML = html;
+  bindCalGridEvents();
+}
+
+function renderCalWeek(){
+  const d = new Date(calDate);
+  const startOffset = d.getDay();
+  const weekStart = new Date(d);
+  weekStart.setDate(d.getDate()-startOffset);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate()+6);
+  calPeriodLabel.textContent = `${formatDate(weekStart)} ~ ${formatDate(weekEnd)}`;
+
+  let html = '<div class="cal-week-header">';
+  for(let i=0;i<7;i++){
+    const dd = new Date(weekStart); dd.setDate(weekStart.getDate()+i);
+    html += `<div>${WEEKDAY_LABELS[i]} ${dd.getDate()}</div>`;
+  }
+  html += '</div><div class="cal-week-grid">';
+  const today = todayStr();
+  for(let i=0;i<7;i++){
+    const dd = new Date(weekStart); dd.setDate(weekStart.getDate()+i);
+    const dateStr = formatDate(dd);
+    const isToday = dateStr === today;
+    const items = getItemsForDate(dateStr);
+    html += `<div class="cal-day-cell ${isToday?'today':''}" data-date="${dateStr}">
+      <div class="cal-day-num">${dd.getDate()}</div>
+      ${items.map(it=>renderChip(it)).join('')}
+    </div>`;
+  }
+  html += '</div>';
+  calGrid.innerHTML = html;
+  bindCalGridEvents();
+}
+
+function renderCalDay(){
+  const dateStr = formatDate(calDate);
+  calPeriodLabel.textContent = calDate.toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+  const items = getItemsForDate(dateStr).slice().sort((a,b)=>{
+    if(!a.startTime && !b.startTime) return 0;
+    if(!a.startTime) return 1;
+    if(!b.startTime) return -1;
+    return a.startTime < b.startTime ? -1 : a.startTime > b.startTime ? 1 : 0;
+  });
+
+  let html = '<div class="cal-day-view">';
+  if(items.length === 0){
+    html += '<div class="empty">이 날짜에는 항목이 없어요.</div>';
+  }else{
+    items.forEach(it=>{
+      const timeLabel = formatTimeRange(it.startTime, it.endTime);
+      html += `<div class="cal-day-item ${it.done?'done':''}" data-id="${it.id}" data-kind="${it.kind}">
+        <div class="checkbox ${it.done?'checked':''}"></div>
+        ${timeLabel ? `<div class="item-tag">${timeLabel}</div>` : ''}
+        <div class="item-text">${escapeHtml(it.text)}</div>
+        ${it.kind==='routine' ? '<div class="item-tag">매일</div>' : ''}
+      </div>`;
+    });
+  }
+  html += '</div>';
+  calGrid.innerHTML = html;
+
+  calGrid.querySelectorAll('.cal-day-item').forEach(row=>{
+    const item = { id: row.dataset.id, kind: row.dataset.kind };
+    row.querySelector('.checkbox').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      calToggleItem(item, dateStr);
+    });
+    row.querySelector('.item-text').addEventListener('click', ()=>calItemClick(item));
+  });
+}
+
+function renderCalYear(){
+  const y = calDate.getFullYear();
+  calPeriodLabel.textContent = `${y}년`;
+  const today = todayStr();
+  let html = '<div class="cal-year-grid">';
+  for(let mo=0; mo<12; mo++){
+    const firstOfMonth = new Date(y, mo, 1);
+    const startOffset = firstOfMonth.getDay();
+    const daysInMonth = new Date(y, mo+1, 0).getDate();
+    html += `<div class="cal-mini-month" data-year="${y}" data-month="${mo}">
+      <div class="cal-mini-month-title">${mo+1}월</div>
+      <div class="cal-mini-grid">`;
+    for(let i=0;i<startOffset;i++) html += '<div class="cal-mini-day"></div>';
+    for(let day=1; day<=daysInMonth; day++){
+      const dateStr = `${y}-${String(mo+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const hasItems = getItemsForDate(dateStr).length > 0;
+      const isToday = dateStr === today;
+      html += `<div class="cal-mini-day ${hasItems?'has-item':''} ${isToday?'today':''}">${day}</div>`;
+    }
+    html += '</div></div>';
+  }
+  html += '</div>';
+  calGrid.innerHTML = html;
+
+  calGrid.querySelectorAll('.cal-mini-month').forEach(mm=>{
+    mm.addEventListener('click', ()=>{
+      calDate = new Date(parseInt(mm.dataset.year), parseInt(mm.dataset.month), 1);
+      setCalMode('month');
+    });
+  });
+}
+
+// 날짜가 바뀌면(자정을 넘기면) 루틴 체크 상태 갱신 + 미완료 할일 자동 이월
+let lastSeenDate = todayStr();
+setInterval(()=>{
+  const now = todayStr();
+  if(now !== lastSeenDate){
+    lastSeenDate = now;
+    deferOverdueTasks();
+    render();
+  }
+}, 60000);
+
+render();
+</script>
+</body>
+</html>
