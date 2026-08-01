@@ -849,6 +849,37 @@
     font-size:18px;
   }
   .wheel-spacer{visibility:hidden;cursor:default;}
+  .wheel-col.dragging{cursor:grabbing;}
+  .wheel-col{cursor:grab;}
+  .ampm-toggle{
+    flex:1;
+    height:160px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    padding:8px 6px;
+    box-sizing:border-box;
+    position:relative;
+    z-index:1;
+  }
+  .ampm-btn{
+    flex:1;
+    border:1px solid var(--border);
+    background:var(--card);
+    color:var(--text-sub);
+    font-size:14px;
+    font-weight:600;
+    border-radius:9px;
+    cursor:pointer;
+    transition:background .15s,color .15s,border-color .15s,box-shadow .15s;
+  }
+  .ampm-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .ampm-btn.active{
+    background:var(--accent-light);
+    color:var(--accent);
+    border-color:var(--accent);
+    box-shadow:var(--shadow-sm);
+  }
   .time-picker-actions{
     display:flex;
     gap:8px;
@@ -1189,10 +1220,10 @@
   </div>
 
   <div class="task-filter-switch" id="task-filter-switch">
-    <button class="task-filter-btn" data-mode="inbox" type="button">기본함</button>
     <button class="task-filter-btn" data-mode="today" type="button">오늘</button>
     <button class="task-filter-btn" data-mode="tomorrow" type="button">내일</button>
     <button class="task-filter-btn" data-mode="next7" type="button">다음 7일</button>
+    <button class="task-filter-btn" data-mode="inbox" type="button">기본함</button>
   </div>
 
   <div class="add-box" id="add-box">
@@ -1290,7 +1321,10 @@
       <div class="wheel-highlight"></div>
       <div class="wheel-col" id="wheel-hour"></div>
       <div class="wheel-col" id="wheel-minute"></div>
-      <div class="wheel-col" id="wheel-ampm"></div>
+      <div class="ampm-toggle" id="ampm-toggle">
+        <button type="button" class="ampm-btn" data-value="AM">오전</button>
+        <button type="button" class="ampm-btn" data-value="PM">오후</button>
+      </div>
     </div>
     <div class="time-picker-actions">
       <button type="button" class="time-picker-clear-btn" id="time-picker-clear-btn">지우기</button>
@@ -1820,7 +1854,7 @@ const timePickerTitleEl = document.getElementById('time-picker-title');
 const timePickerCloseEl = document.getElementById('time-picker-close');
 const wheelHourEl = document.getElementById('wheel-hour');
 const wheelMinuteEl = document.getElementById('wheel-minute');
-const wheelAmpmEl = document.getElementById('wheel-ampm');
+const ampmToggle = document.getElementById('ampm-toggle');
 const timePickerClearBtn = document.getElementById('time-picker-clear-btn');
 const timePickerDoneBtn = document.getElementById('time-picker-done-btn');
 const timeBtnRow = document.getElementById('time-btn-row');
@@ -2027,7 +2061,6 @@ const WHEEL_ITEM_H = 32;
 const WHEEL_PAD = 2;
 const WHEEL_HOURS = Array.from({length:12}, (_,i)=>({ value:i+1, label:String(i+1) }));
 const WHEEL_MINUTES = Array.from({length:60}, (_,i)=>({ value:i, label:String(i).padStart(2,'0') }));
-const WHEEL_AMPM = [{ value:'AM', label:'오전' }, { value:'PM', label:'오후' }];
 
 let timePickerItem = null;
 let timePickerField = null;
@@ -2076,7 +2109,52 @@ function buildWheel(container, items, selectedIndex, onSettle){
 
   container.scrollTop = selectedIndex * WHEEL_ITEM_H;
   updateSelected();
+
+  // enable click-and-drag scrolling with the mouse (native overflow-scroll only responds to wheel/touch)
+  if(!container._dragBound){
+    container._dragBound = true;
+    let dragging = false, startY = 0, startScroll = 0, moved = false;
+    container.addEventListener('mousedown', (e)=>{
+      dragging = true;
+      moved = false;
+      startY = e.clientY;
+      startScroll = container.scrollTop;
+      container.classList.add('dragging');
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e)=>{
+      if(!dragging) return;
+      const dy = e.clientY - startY;
+      if(Math.abs(dy) > 3) moved = true;
+      const maxScroll = container.scrollHeight - container.clientHeight;
+      container.scrollTop = Math.max(0, Math.min(maxScroll, startScroll - dy));
+    });
+    window.addEventListener('mouseup', ()=>{
+      if(!dragging) return;
+      dragging = false;
+      container.classList.remove('dragging');
+      const items = container.querySelectorAll('.wheel-item');
+      const idx = Math.max(0, Math.min(items.length-1, Math.round(container.scrollTop / WHEEL_ITEM_H)));
+      container.scrollTo({ top: idx*WHEEL_ITEM_H, behavior:'smooth' });
+    });
+    container.addEventListener('click', (e)=>{
+      if(moved){ e.stopPropagation(); e.preventDefault(); moved = false; }
+    }, true);
+  }
 }
+
+function updateAmpmToggle(){
+  ampmToggle.querySelectorAll('.ampm-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.value === wheelState.ampm);
+  });
+}
+
+ampmToggle.querySelectorAll('.ampm-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    wheelState.ampm = btn.dataset.value;
+    updateAmpmToggle();
+  });
+});
 
 function to24Hour(h12, ampm){
   let h = h12 % 12;
@@ -2103,7 +2181,7 @@ function openTimePicker(item, field, titleText){
 
   buildWheel(wheelHourEl, WHEEL_HOURS, h12-1, v=>{ wheelState.hour = v; });
   buildWheel(wheelMinuteEl, WHEEL_MINUTES, min, v=>{ wheelState.minute = v; });
-  buildWheel(wheelAmpmEl, WHEEL_AMPM, ampmVal==='AM'?0:1, v=>{ wheelState.ampm = v; });
+  updateAmpmToggle();
 
   timePickerOverlay.classList.add('open');
 }
