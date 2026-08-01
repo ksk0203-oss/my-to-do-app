@@ -366,6 +366,8 @@
     cursor:pointer;
     opacity:0;
     pointer-events:none;
+    white-space:nowrap;
+    flex-shrink:0;
     transition:opacity .15s, background .15s;
   }
   .add-box button:hover{background:var(--accent-hover);}
@@ -1532,25 +1534,27 @@
       min-width:140px;
     }
 
-    /* 전체적으로 글씨를 약 2px 키움 (가독성) */
-    .item-text{font-size:16.5px;}
-    .item-tag{font-size:13px;}
-    .empty{font-size:15.5px;}
-    .note-preview{font-size:14.5px;}
-    .archive-item{font-size:15.5px;}
-    .mobile-drawer-item{font-size:17px;}
-    .search-box input{font-size:15.5px;}
-    .add-box input{font-size:16.5px;}
-    .add-box button{font-size:15px;}
-    .main-title{font-size:27px;}
-    .gsr-item-text{font-size:16px;}
-    .detail-title-input{font-size:18px;}
-    .detail-note{font-size:15.5px;}
-    .detail-subtask-add input{font-size:15px;}
+    /* 전체적으로 글씨를 키움 (가독성) */
+    .item-text{font-size:18px;}
+    .item-tag{font-size:14px;}
+    .empty{font-size:17px;}
+    .note-preview{font-size:16px;}
+    .archive-item{font-size:17px;}
+    .mobile-drawer-item{font-size:18.5px;}
+    .search-box input{font-size:17px;}
+    .add-box input{font-size:18px;}
+    .add-box button{font-size:16px;padding:8px 14px;}
+    .main-title{font-size:28px;}
+    .gsr-item-text{font-size:17px;}
+    .detail-title-input{font-size:19px;}
+    .detail-note{font-size:17px;}
+    .detail-subtask-add input{font-size:16px;}
+    .card-header-title{font-size:16.5px;}
+    .card-header-count{font-size:14px;}
 
     /* 첫화면(모바일 오늘 필터)에서 오늘/루틴/완료를 순서대로 섹션으로 표시 */
     .mobile-home-title{
-      font-size:24px;
+      font-size:26px;
       font-weight:800;
       color:var(--text);
       letter-spacing:-.3px;
