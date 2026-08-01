@@ -1474,13 +1474,14 @@ const googleClientIdInput = document.getElementById('google-client-id-input');
 const googleFileWarning = document.getElementById('google-file-warning');
 
 function loadGoogleConfig(){
-  let cfg = { clientId:'', pendingDeletes:[] };
+  let cfg = { clientId:'', pendingDeletes:[], wasConnected:false };
   try{
     const raw = localStorage.getItem(GOOGLE_CONFIG_KEY);
     if(raw) cfg = Object.assign(cfg, JSON.parse(raw));
   }catch(e){}
   if(!Array.isArray(cfg.pendingDeletes)) cfg.pendingDeletes = [];
   if(typeof cfg.clientId !== 'string') cfg.clientId = '';
+  if(typeof cfg.wasConnected !== 'boolean') cfg.wasConnected = false;
   return cfg;
 }
 function saveGoogleConfig(){
@@ -1504,6 +1505,8 @@ function updateGoogleUI(){
   googleFileWarning.style.display = (location.protocol === 'file:') ? 'block' : 'none';
 }
 
+let googleSilentAttempted = false;
+
 function initGoogleAuth(){
   if(!window.google || !google.accounts || !google.accounts.oauth2 || !googleConfig.clientId) return;
   googleTokenClient = google.accounts.oauth2.initTokenClient({
@@ -1512,12 +1515,26 @@ function initGoogleAuth(){
     callback: (resp)=>{
       if(resp && resp.access_token){
         googleAccessToken = resp.access_token;
+        googleConfig.wasConnected = true;
+        saveGoogleConfig();
         updateGoogleUI();
         syncWithGoogle();
         scheduleAutoSync();
       }
+    },
+    error_callback: ()=>{
+      // silent reconnect attempt failed (no active session / consent expired) — stay disconnected, user can click 연결하기
+      updateGoogleUI();
     }
   });
+}
+
+function tryAutoReconnect(){
+  if(googleSilentAttempted) return;
+  googleSilentAttempted = true;
+  if(googleConfig.wasConnected && googleTokenClient && location.protocol !== 'file:'){
+    try{ googleTokenClient.requestAccessToken({ prompt: 'none' }); }catch(e){}
+  }
 }
 
 googleClientIdInput.addEventListener('change', ()=>{
@@ -1552,6 +1569,8 @@ googleDisconnectBtn.addEventListener('click', ()=>{
     google.accounts.oauth2.revoke(googleAccessToken, ()=>{});
   }
   googleAccessToken = null;
+  googleConfig.wasConnected = false;
+  saveGoogleConfig();
   clearTimeout(googleAutoSyncTimer);
   updateGoogleUI();
 });
@@ -1709,6 +1728,7 @@ if(googleConfig.clientId){
     if(window.google && google.accounts && google.accounts.oauth2){
       clearInterval(waitGis);
       initGoogleAuth();
+      tryAutoReconnect();
     }
   }, 300);
 }
