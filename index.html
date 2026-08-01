@@ -1356,8 +1356,8 @@
   .mobile-topbar{
     display:none;
     align-items:center;
-    gap:12px;
-    padding:12px 16px;
+    justify-content:flex-start;
+    padding:calc(4px + env(safe-area-inset-top)) 10px 4px;
     background:var(--card);
     border-bottom:1px solid var(--border);
     position:sticky;
@@ -1367,21 +1367,15 @@
   .mobile-hamburger{
     border:none;
     background:var(--hover-overlay);
-    width:38px;height:38px;
-    border-radius:10px;
-    font-size:18px;
+    width:34px;height:34px;
+    border-radius:9px;
+    font-size:16px;
     color:var(--text);
     cursor:pointer;
     display:flex;align-items:center;justify-content:center;
     flex-shrink:0;
   }
-  .mobile-topbar-title{
-    font-size:17px;
-    font-weight:700;
-    flex:1;
-    text-align:center;
-  }
-  .mobile-topbar-spacer{width:38px;flex-shrink:0;}
+  .mobile-topbar-title, .mobile-topbar-spacer{display:none;}
 
   .mobile-drawer-overlay{
     display:none;
@@ -1464,13 +1458,12 @@
   }
   .mobile-nav-btn.active{color:var(--accent);background:var(--accent-light);}
   .mobile-nav-center{
-    width:48px;height:48px;
+    width:44px;height:44px;
     border-radius:50%;
     background:var(--accent);
     color:#fff;
-    font-size:18px;
+    font-size:17px;
     box-shadow:0 6px 16px rgba(239,91,63,.35);
-    transform:translateY(-4px);
   }
   body[data-theme="dark"] .mobile-nav-center{box-shadow:0 6px 16px rgba(255,122,92,.3);}
   .mobile-nav-center.active{background:var(--accent-hover);color:#fff;}
@@ -1486,6 +1479,27 @@
     .task-filter-switch{display:none !important;}
     .pomodoro-view{padding-bottom:calc(84px + env(safe-area-inset-bottom));}
     .pomo-card{max-width:100%;}
+
+    /* narrow item rows: keep checkbox+title on one line, wrap tags/icons below instead of squeezing CJK text to 1 char/line */
+    .item{
+      flex-wrap:wrap;
+      row-gap:6px;
+    }
+    .item-text{
+      flex:1 1 140px;
+      min-width:140px;
+    }
+    .item-tag, .item-move, .item-del, .note-dot, .item-progress{
+      flex-shrink:0;
+    }
+    .archive-item{
+      flex-wrap:wrap;
+      row-gap:4px;
+    }
+    .archive-item .item-text{
+      flex:1 1 140px;
+      min-width:140px;
+    }
   }
 
   /* Global search overlay */
