@@ -945,6 +945,34 @@
     box-shadow:var(--shadow-sm);
   }
 
+  .task-filter-switch{
+    display:flex;
+    background:var(--hover-overlay);
+    border-radius:9px;
+    padding:3px;
+    gap:2px;
+    margin-bottom:14px;
+  }
+  .task-filter-btn{
+    flex:1;
+    border:none;
+    background:transparent;
+    padding:7px 10px;
+    border-radius:7px;
+    cursor:pointer;
+    font-size:12.5px;
+    color:var(--text-sub);
+    font-weight:500;
+    white-space:nowrap;
+    text-align:center;
+    transition:background .15s,color .15s,box-shadow .15s;
+  }
+  .task-filter-btn.active{
+    background:var(--card);
+    color:var(--accent);
+    box-shadow:var(--shadow-sm);
+  }
+
   .cal-week-header{
     display:grid;
     grid-template-columns:repeat(7,1fr);
@@ -1158,6 +1186,13 @@
   <div class="search-box" id="search-box">
     <span class="search-icon">🔍</span>
     <input type="text" id="search-input" placeholder="검색">
+  </div>
+
+  <div class="task-filter-switch" id="task-filter-switch">
+    <button class="task-filter-btn" data-mode="inbox" type="button">기본함</button>
+    <button class="task-filter-btn" data-mode="today" type="button">오늘</button>
+    <button class="task-filter-btn" data-mode="tomorrow" type="button">내일</button>
+    <button class="task-filter-btn" data-mode="next7" type="button">다음 7일</button>
   </div>
 
   <div class="add-box" id="add-box">
@@ -1404,11 +1439,32 @@ let archiveOpen = false;
 let calMode = 'month'; // 'year' | 'month' | 'week' | 'day'
 let calDate = new Date();
 let searchQuery = '';
+let taskViewMode = 'inbox'; // 'inbox' | 'today' | 'tomorrow' | 'next7'
 
 const listEl = document.getElementById('list');
 const emptyEl = document.getElementById('empty-msg');
 const searchBox = document.getElementById('search-box');
 const searchInput = document.getElementById('search-input');
+const taskFilterSwitch = document.getElementById('task-filter-switch');
+
+function taskMatchesViewMode(t, mode){
+  if(mode === 'inbox') return true;
+  const today = todayStr();
+  if(mode === 'today') return t.dueDate === today;
+  if(mode === 'tomorrow') return t.dueDate === addDays(today, 1);
+  if(mode === 'next7'){
+    const in7 = addDays(today, 7);
+    return t.dueDate > today && t.dueDate <= in7;
+  }
+  return true;
+}
+
+taskFilterSwitch.querySelectorAll('.task-filter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    taskViewMode = btn.dataset.mode;
+    render();
+  });
+});
 const exportBtn = document.getElementById('export-btn');
 const importBtn = document.getElementById('import-btn');
 const importFile = document.getElementById('import-file');
@@ -2117,6 +2173,7 @@ document.querySelectorAll('.nav-item').forEach(el=>{
     calendarViewEl.style.display = isCal ? 'flex' : 'none';
     searchBox.style.display = isCal ? 'none' : 'flex';
     addDateBtn.style.display = currentView === 'tasks' ? 'flex' : 'none';
+    taskFilterSwitch.style.display = currentView === 'tasks' ? 'flex' : 'none';
     if(isCal){
       emptyEl.style.display = 'none';
       archiveToggle.style.display = 'none';
@@ -2357,7 +2414,13 @@ function render(){
   listEl.innerHTML = '';
 
   if(currentView === 'tasks'){
-    const visibleTasks = searchQuery ? data.tasks.filter(t=>t.text.toLowerCase().includes(searchQuery)) : data.tasks;
+    taskFilterSwitch.querySelectorAll('.task-filter-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.mode === taskViewMode);
+    });
+
+    const visibleTasks = data.tasks.filter(t=>
+      (!searchQuery || t.text.toLowerCase().includes(searchQuery)) && taskMatchesViewMode(t, taskViewMode)
+    );
     const visibleCompleted = searchQuery ? data.completedTasks.filter(t=>t.text.toLowerCase().includes(searchQuery)) : data.completedTasks;
 
     archiveToggle.style.display = visibleCompleted.length ? 'flex' : 'none';
@@ -2365,9 +2428,15 @@ function render(){
     archiveArrow.textContent = archiveOpen ? '▾' : '▸';
     archiveListEl.classList.toggle('open', archiveOpen);
 
+    const emptyMessages = {
+      today: '오늘 예정된 할일이 없어요.',
+      tomorrow: '내일 예정된 할일이 없어요.',
+      next7: '다음 7일 안에 예정된 할일이 없어요.',
+      inbox: '할일이 없어요. 위에서 새로 추가해보세요.'
+    };
     if(visibleTasks.length === 0){
       emptyEl.style.display = 'block';
-      emptyEl.textContent = searchQuery ? '검색 결과가 없어요.' : '할일이 없어요. 위에서 새로 추가해보세요.';
+      emptyEl.textContent = searchQuery ? '검색 결과가 없어요.' : (emptyMessages[taskViewMode] || emptyMessages.inbox);
     }else{
       emptyEl.style.display = 'none';
       visibleTasks.forEach(t=>{
