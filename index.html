@@ -1042,6 +1042,56 @@
   }
   .time-picker-done-btn:hover{background:var(--accent-hover);}
 
+  /* iOS 홈 화면 설치 앱에서 구글 로그인 시 사파리로 유도하는 모달 —
+     window.open()도 iOS standalone 모드에선 막힐 수 있어서, 반드시 사용자가 직접 탭하는
+     진짜 <a target="_blank"> 링크로 구현 (JS로 여는 창은 신뢰할 수 없음) */
+  .ios-safari-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(20,16,10,.4);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:200;
+    padding:24px;
+  }
+  body[data-theme="dark"] .ios-safari-overlay{background:rgba(0,0,0,.55);}
+  .ios-safari-overlay.open{display:flex;}
+  .ios-safari-modal{
+    background:var(--card);
+    border-radius:20px;
+    width:320px;
+    max-width:88vw;
+    padding:22px;
+    box-shadow:var(--shadow-md);
+    text-align:center;
+  }
+  .ios-safari-text{
+    font-size:13.5px;
+    line-height:1.6;
+    color:var(--text);
+    margin-bottom:18px;
+  }
+  .ios-safari-open-btn{
+    display:block;
+    background:var(--accent);
+    color:#fff;
+    padding:11px 0;
+    border-radius:10px;
+    font-size:14px;
+    font-weight:700;
+    text-decoration:none;
+    transition:background .15s;
+  }
+  .ios-safari-open-btn:hover{background:var(--accent-hover);}
+  .ios-safari-close{
+    margin-top:14px;
+    font-size:12.5px;
+    color:var(--text-sub);
+    cursor:pointer;
+  }
+  .ios-safari-close:hover{color:var(--accent);}
+
   /* Calendar */
   .calendar-view{
     display:flex;
@@ -2077,6 +2127,14 @@
   </div>
 </div>
 
+<div class="ios-safari-overlay" id="ios-safari-overlay">
+  <div class="ios-safari-modal">
+    <div class="ios-safari-text">설치된 앱에서는 iOS 제한으로 구글 로그인 창이 뜨지 않아요.<br>아래 버튼을 눌러 사파리에서 연결을 완료해주세요.<br>완료 후 이 앱으로 돌아오면 자동으로 연결됩니다.</div>
+    <a class="ios-safari-open-btn" id="ios-safari-open-link" href="#" target="_blank" rel="noopener">사파리에서 열기</a>
+    <div class="ios-safari-close" id="ios-safari-close">닫기</div>
+  </div>
+</div>
+
 <div class="global-search-overlay" id="global-search-overlay">
   <div class="global-search-header">
     <span class="global-search-icon">🔍</span>
@@ -2205,6 +2263,7 @@ function loadData(){
 }
 function saveData(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  scheduleQuickGoogleSync();
 }
 
 function deferOverdueTasks(){
@@ -2585,9 +2644,27 @@ googleSettingsToggle.addEventListener('click', ()=>{
 // iOS에서 홈 화면에 설치한 PWA(standalone) 안에서는 구글 로그인 팝업이 아예 뜨지 않는
 // 애플 플랫폼 자체의 알려진 제약이 있음(앱 코드 문제가 아님). 이 경우엔 팝업을 시도하는 대신
 // 같은 페이지를 일반 사파리 탭에서 새로 열어 그쪽에서 로그인을 완료하도록 유도한다.
+// window.open()으로 JS가 직접 새 창을 여는 것도 iOS standalone에서는 막힐 수 있어서,
+// 반드시 사용자가 직접 손가락으로 탭하는 진짜 <a target="_blank"> 링크를 보여준다.
 function isStandaloneIOS(){
   return window.navigator.standalone === true;
 }
+
+const iosSafariOverlay = document.getElementById('ios-safari-overlay');
+const iosSafariOpenLink = document.getElementById('ios-safari-open-link');
+const iosSafariClose = document.getElementById('ios-safari-close');
+
+function openIosSafariPrompt(){
+  iosSafariOpenLink.href = location.href.split('#')[0].split('?')[0];
+  iosSafariOverlay.classList.add('open');
+}
+function closeIosSafariPrompt(){
+  iosSafariOverlay.classList.remove('open');
+}
+iosSafariClose.addEventListener('click', closeIosSafariPrompt);
+iosSafariOverlay.addEventListener('click', (e)=>{
+  if(e.target === iosSafariOverlay) closeIosSafariPrompt();
+});
 
 function handleGoogleConnectClick(){
   if(location.protocol === 'file:'){
@@ -2600,8 +2677,7 @@ function handleGoogleConnectClick(){
     return;
   }
   if(isStandaloneIOS()){
-    alert('설치된 앱에서는 iOS 제한으로 구글 로그인 창이 뜨지 않아요.\n지금 여는 사파리 탭에서 "연결하기"를 눌러 로그인을 완료해주세요. 완료 후 이 앱으로 돌아오면 자동으로 연결됩니다.');
-    window.open(location.href.split('#')[0].split('?')[0], '_blank');
+    openIosSafariPrompt();
     return;
   }
   if(!googleTokenClient) initGoogleAuth();
@@ -2611,7 +2687,9 @@ function handleGoogleConnectClick(){
 
 // 사파리 탭에서 로그인을 마치고 설치된 앱으로 돌아왔을 때, 새로고침 없이도 자동으로 연결 상태를 확인
 document.addEventListener('visibilitychange', ()=>{
-  if(document.visibilityState === 'visible' && isStandaloneIOS() && !googleAccessToken && googleConfig.wasConnected){
+  if(document.visibilityState !== 'visible' || !isStandaloneIOS()) return;
+  closeIosSafariPrompt();
+  if(!googleAccessToken && googleConfig.wasConnected){
     googleSilentAttempted = false;
     if(googleTokenClient) tryAutoReconnect();
   }
@@ -2642,6 +2720,15 @@ function scheduleAutoSync(){
   googleAutoSyncTimer = setTimeout(()=>{
     if(googleAccessToken){ syncWithGoogle(); scheduleAutoSync(); }
   }, 5*60*1000);
+}
+
+// 할일/루틴을 추가·수정·삭제·완료할 때마다(=saveData 호출 시점마다) 몇 초 후 자동으로 한 번 동기화.
+// 연결되어 있지 않으면 아무 것도 하지 않음 — "연결하기"는 처음 한 번(또는 로그인 세션이 만료됐을 때)만 필요.
+let quickSyncTimer = null;
+function scheduleQuickGoogleSync(){
+  if(!googleAccessToken) return;
+  clearTimeout(quickSyncTimer);
+  quickSyncTimer = setTimeout(()=>{ syncWithGoogle(); }, 2000);
 }
 
 async function googleApiFetch(path, options){
