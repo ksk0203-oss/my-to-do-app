@@ -1465,6 +1465,24 @@
   }
   .mobile-drawer-item.active .mobile-drawer-count{color:var(--accent);}
 
+  .mobile-drawer-divider{
+    height:1px;
+    background:var(--border);
+    margin:16px 4px;
+  }
+  .mobile-drawer-google{
+    padding:4px 10px 6px;
+  }
+  .mobile-drawer-google-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:14px;
+    font-weight:600;
+    color:var(--text);
+    margin-bottom:10px;
+  }
+
   .mobile-bottom-nav{
     display:none;
     position:fixed;
@@ -1551,6 +1569,9 @@
     .detail-subtask-add input{font-size:16px;}
     .card-header-title{font-size:16.5px;}
     .card-header-count{font-size:14px;}
+    .mobile-drawer-google-header{font-size:15px;}
+    .mobile-drawer-google .data-btn{font-size:12.5px;padding:8px 0;}
+    .mobile-drawer-google .google-sync-status{font-size:12px;}
 
     /* 첫화면(모바일 오늘 필터)에서 오늘/루틴/완료를 순서대로 섹션으로 표시 */
     .mobile-home-title{
@@ -1669,6 +1690,21 @@
     <span class="mobile-drawer-icon">📥</span>
     <span class="mobile-drawer-label">기본함</span>
     <span class="mobile-drawer-count" id="drawer-count-inbox">0</span>
+  </div>
+
+  <div class="mobile-drawer-divider"></div>
+
+  <div class="mobile-drawer-google" id="mobile-drawer-google">
+    <div class="mobile-drawer-google-header">
+      <span>📅 Google Calendar</span>
+      <span class="google-sync-status" id="mobile-google-status">연결 안됨</span>
+    </div>
+    <div class="google-sync-actions">
+      <button class="data-btn" id="mobile-google-connect-btn" type="button">연결하기</button>
+      <button class="data-btn" id="mobile-google-sync-now-btn" type="button" style="display:none;">지금 동기화</button>
+      <button class="data-btn" id="mobile-google-disconnect-btn" type="button" style="display:none;">연결 해제</button>
+    </div>
+    <div class="google-file-warning" id="mobile-google-file-warning" style="display:none;">이 파일을 file://로 열면 구글 로그인이 동작하지 않습니다.</div>
   </div>
 </div>
 
@@ -2323,14 +2359,25 @@ const googleSettingsPanel = document.getElementById('google-settings-panel');
 const googleClientIdInput = document.getElementById('google-client-id-input');
 const googleFileWarning = document.getElementById('google-file-warning');
 
+// 모바일 드로어에도 데스크톱 사이드바와 동일한 컨트롤을 노출 (모바일에서는 사이드바 자체가 숨겨지므로)
+const mobileGoogleStatusEl = document.getElementById('mobile-google-status');
+const mobileGoogleConnectBtn = document.getElementById('mobile-google-connect-btn');
+const mobileGoogleSyncNowBtn = document.getElementById('mobile-google-sync-now-btn');
+const mobileGoogleDisconnectBtn = document.getElementById('mobile-google-disconnect-btn');
+const mobileGoogleFileWarning = document.getElementById('mobile-google-file-warning');
+
+// 이 앱 전용으로 이미 발급된 OAuth 클라이언트 ID. 기기별 localStorage에 별도로 저장된 값이 없을 때(예: 처음 여는 모바일 브라우저)
+// 자동으로 이 값을 기본값으로 사용해서, 폰에서도 별도 설정 없이 바로 "연결하기"가 가능하도록 함.
+const GOOGLE_DEFAULT_CLIENT_ID = '505541970714-rn3qt1sggckdhtpqgnov890t1opir7ja.apps.googleusercontent.com';
+
 function loadGoogleConfig(){
-  let cfg = { clientId:'', pendingDeletes:[], wasConnected:false };
+  let cfg = { clientId: GOOGLE_DEFAULT_CLIENT_ID, pendingDeletes:[], wasConnected:false };
   try{
     const raw = localStorage.getItem(GOOGLE_CONFIG_KEY);
     if(raw) cfg = Object.assign(cfg, JSON.parse(raw));
   }catch(e){}
   if(!Array.isArray(cfg.pendingDeletes)) cfg.pendingDeletes = [];
-  if(typeof cfg.clientId !== 'string') cfg.clientId = '';
+  if(typeof cfg.clientId !== 'string' || !cfg.clientId) cfg.clientId = GOOGLE_DEFAULT_CLIENT_ID;
   if(typeof cfg.wasConnected !== 'boolean') cfg.wasConnected = false;
   return cfg;
 }
@@ -2347,12 +2394,22 @@ let googleAutoSyncTimer = null;
 function updateGoogleUI(){
   googleClientIdInput.value = googleConfig.clientId || '';
   const connected = !!googleAccessToken;
-  googleSyncStatusEl.textContent = connected ? '연결됨' : '연결 안됨';
+  const statusText = connected ? '연결됨' : '연결 안됨';
+  const isFile = location.protocol === 'file:';
+
+  googleSyncStatusEl.textContent = statusText;
   googleSyncStatusEl.classList.toggle('connected', connected);
   googleConnectBtn.style.display = connected ? 'none' : 'inline-flex';
   googleSyncNowBtn.style.display = connected ? 'inline-flex' : 'none';
   googleDisconnectBtn.style.display = connected ? 'inline-flex' : 'none';
-  googleFileWarning.style.display = (location.protocol === 'file:') ? 'block' : 'none';
+  googleFileWarning.style.display = isFile ? 'block' : 'none';
+
+  mobileGoogleStatusEl.textContent = statusText;
+  mobileGoogleStatusEl.classList.toggle('connected', connected);
+  mobileGoogleConnectBtn.style.display = connected ? 'none' : 'inline-flex';
+  mobileGoogleSyncNowBtn.style.display = connected ? 'inline-flex' : 'none';
+  mobileGoogleDisconnectBtn.style.display = connected ? 'inline-flex' : 'none';
+  mobileGoogleFileWarning.style.display = isFile ? 'block' : 'none';
 }
 
 let googleSilentAttempted = false;
@@ -2388,7 +2445,7 @@ function tryAutoReconnect(){
 }
 
 googleClientIdInput.addEventListener('change', ()=>{
-  googleConfig.clientId = googleClientIdInput.value.trim();
+  googleConfig.clientId = googleClientIdInput.value.trim() || GOOGLE_DEFAULT_CLIENT_ID;
   saveGoogleConfig();
   googleTokenClient = null;
   initGoogleAuth();
@@ -2399,22 +2456,22 @@ googleSettingsToggle.addEventListener('click', ()=>{
   googleSettingsPanel.style.display = open ? 'none' : 'block';
 });
 
-googleConnectBtn.addEventListener('click', ()=>{
+function handleGoogleConnectClick(){
   if(location.protocol === 'file:'){
-    alert('이 파일을 file://로 열면 구글 로그인이 동작하지 않아요.\n로컬 서버(예: python -m http.server)로 열어서 http://localhost 주소로 접속한 뒤 다시 시도해주세요.');
+    alert('이 파일을 file://로 열면 구글 로그인이 동작하지 않습니다.\n로컬 서버(예: python -m http.server)로 열어서 http://localhost 주소로 접속한 뒤 다시 시도해주세요.');
     return;
   }
   if(!googleConfig.clientId){
-    alert('먼저 아래 "연동 설정"에서 OAuth 클라이언트 ID를 입력해주세요.');
+    alert('먼저 데스크톱의 "연동 설정"에서 OAuth 클라이언트 ID를 입력해주세요.');
     googleSettingsPanel.style.display = 'block';
     return;
   }
   if(!googleTokenClient) initGoogleAuth();
   if(googleTokenClient) googleTokenClient.requestAccessToken({ prompt: googleAccessToken ? '' : 'consent' });
-  else alert('구글 로그인 스크립트를 아직 불러오는 중이에요. 잠시 후 다시 시도해주세요.');
-});
+  else alert('구글 로그인 스크립트를 아직 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+}
 
-googleDisconnectBtn.addEventListener('click', ()=>{
+function handleGoogleDisconnectClick(){
   if(googleAccessToken && window.google && google.accounts && google.accounts.oauth2){
     google.accounts.oauth2.revoke(googleAccessToken, ()=>{});
   }
@@ -2423,9 +2480,16 @@ googleDisconnectBtn.addEventListener('click', ()=>{
   saveGoogleConfig();
   clearTimeout(googleAutoSyncTimer);
   updateGoogleUI();
-});
+}
+
+googleConnectBtn.addEventListener('click', handleGoogleConnectClick);
+mobileGoogleConnectBtn.addEventListener('click', handleGoogleConnectClick);
+
+googleDisconnectBtn.addEventListener('click', handleGoogleDisconnectClick);
+mobileGoogleDisconnectBtn.addEventListener('click', handleGoogleDisconnectClick);
 
 googleSyncNowBtn.addEventListener('click', ()=>syncWithGoogle());
+mobileGoogleSyncNowBtn.addEventListener('click', ()=>syncWithGoogle());
 
 function scheduleAutoSync(){
   clearTimeout(googleAutoSyncTimer);
