@@ -318,6 +318,7 @@
   .search-icon{font-size:13px;opacity:.55;}
   .search-box input{
     flex:1;
+    min-width:0;
     border:none;
     outline:none;
     font-size:13.5px;
@@ -348,6 +349,7 @@
   }
   .add-box input{
     flex:1;
+    min-width:0;
     border:none;
     outline:none;
     font-size:14.5px;
@@ -407,7 +409,6 @@
     flex-direction:column;
     background:var(--card);
     border:1px solid var(--border);
-    border-left:3px solid var(--accent);
     border-radius:var(--radius);
     box-shadow:var(--shadow-sm);
     overflow:hidden;
@@ -587,7 +588,6 @@
     flex-direction:column;
     background:var(--card);
     border:1px solid var(--border);
-    border-left:3px solid var(--checkbox-border);
     border-radius:var(--radius);
     box-shadow:var(--shadow-sm);
     overflow:hidden;
@@ -618,26 +618,46 @@
   .item-text{cursor:pointer;}
   .note-dot{font-size:12px;flex-shrink:0;opacity:.65;}
 
-  /* Detail panel */
+  /* Detail panel — TickTick식 3단 구성(리스트|할일|상세)의 세 번째 컬럼. 데스크톱에서는 선택 여부와 무관하게 항상 자리를 차지하고,
+     선택된 게 없으면 빈 상태 문구를, 선택되면 폼을 보여준다. */
   .detail-panel{
-    position:fixed;
-    top:0;
-    right:0;
+    display:flex;
+    width:360px;
+    min-width:360px;
+    max-width:360px;
     height:100vh;
-    width:340px;
-    max-width:88vw;
     background:var(--card);
     border-left:1px solid var(--border);
-    box-shadow:-12px 0 32px rgba(0,0,0,.16);
-    transform:translateX(100%);
-    transition:transform .25s ease;
-    z-index:80;
     padding:24px;
-    display:flex;
     flex-direction:column;
+    flex-shrink:0;
     overflow-y:auto;
   }
-  .detail-panel.open{transform:translateX(0);}
+  .detail-panel.open{
+    animation:detailPanelIn .16s ease;
+  }
+  @keyframes detailPanelIn{
+    from{opacity:0; transform:translateX(10px);}
+    to{opacity:1; transform:translateX(0);}
+  }
+  .detail-empty-state{
+    display:flex;
+    flex:1;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    color:var(--text-sub);
+    font-size:13px;
+    line-height:1.7;
+  }
+  .detail-panel.open .detail-empty-state{display:none;}
+  .detail-form{
+    display:none;
+    flex-direction:column;
+    flex:1;
+    min-height:0;
+  }
+  .detail-panel.open .detail-form{display:flex;}
   .detail-panel-header{
     display:flex;
     align-items:flex-start;
@@ -646,6 +666,7 @@
   }
   .detail-title-input{
     flex:1;
+    min-width:0;
     border:none;
     outline:none;
     background:transparent;
@@ -724,15 +745,16 @@
   .priority-btn[data-p="medium"].active{background:#E0A233;}
   .priority-btn[data-p="low"].active{background:#4A8FE0;}
   .priority-btn[data-p=""].active{background:var(--checkbox-border);color:var(--text);}
-  .item-priority-dot{
-    width:7px;height:7px;border-radius:50%;flex-shrink:0;
+  /* 우선순위: 줄 전체를 색으로 감싸는 대신, 체크박스 앞에 작은 색상 점(플래그)만 표시 — TickTick 스타일 */
+  .item.priority-high::before, .item.priority-medium::before, .item.priority-low::before{
+    content:'';
+    width:7px;height:7px;
+    border-radius:50%;
+    flex-shrink:0;
   }
-  .item-priority-dot.high{background:#E1554A;}
-  .item-priority-dot.medium{background:#E0A233;}
-  .item-priority-dot.low{background:#4A8FE0;}
-  .item.priority-high{border-left:3px solid #E1554A;}
-  .item.priority-medium{border-left:3px solid #E0A233;}
-  .item.priority-low{border-left:3px solid #4A8FE0;}
+  .item.priority-high::before{background:#E1554A;}
+  .item.priority-medium::before{background:#E0A233;}
+  .item.priority-low::before{background:#4A8FE0;}
 
   /* Progress bar in list row */
   .item-progress{
@@ -1429,7 +1451,7 @@
     max-width:300px;
     background:var(--card);
     z-index:41;
-    padding:24px 14px;
+    padding:calc(24px + env(safe-area-inset-top)) 14px calc(24px + env(safe-area-inset-bottom));
     transform:translateX(-100%);
     transition:transform .25s ease;
     box-shadow:var(--shadow-md);
@@ -1525,11 +1547,35 @@
     .mobile-bottom-nav{display:flex;}
     .mobile-drawer-overlay{display:block;}
     .mobile-drawer{display:block;}
-    .main{padding:calc(58px + env(safe-area-inset-top)) 16px calc(84px + env(safe-area-inset-bottom));max-width:100%;}
+    /* 어떤 요소가 좁은 화면 폭을 넘치더라도 가로 스크롤/잘림 없이 안전하게 잘리도록 방어 */
+    body{overflow-x:hidden;}
+    .main{padding:calc(58px + env(safe-area-inset-top)) 16px calc(84px + env(safe-area-inset-bottom));max-width:100%;overflow-x:hidden;}
     .verse-box{display:none;}
     .task-filter-switch{display:none !important;}
     .pomodoro-view{padding-bottom:calc(84px + env(safe-area-inset-bottom));}
     .pomo-card{max-width:100%;}
+
+    /* 데스크톱은 3단 컬럼으로 상세패널을 고정 배치하지만, 모바일 화면에서는 폭이 없어 전체화면 슬라이드 오버레이 방식을 그대로 유지 */
+    .detail-panel{
+      display:flex;
+      position:fixed;
+      top:0;right:0;
+      width:100%;
+      min-width:0;
+      max-width:100%;
+      height:100vh;
+      border-left:none;
+      box-shadow:-12px 0 32px rgba(0,0,0,.16);
+      transform:translateX(100%);
+      transition:transform .25s ease;
+      animation:none;
+      z-index:80;
+      padding:calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+    }
+    .detail-panel.open{
+      transform:translateX(0);
+      animation:none;
+    }
 
     /* narrow item rows: keep checkbox+title on one line, wrap tags/icons below instead of squeezing CJK text to 1 char/line */
     .item{
@@ -1599,7 +1645,7 @@
     display:flex;
     align-items:center;
     gap:10px;
-    padding:14px 16px;
+    padding:calc(14px + env(safe-area-inset-top)) 16px 14px;
     border-bottom:1px solid var(--border);
     background:var(--card);
     flex-shrink:0;
@@ -1919,6 +1965,8 @@
 </div>
 
 <div class="detail-panel" id="detail-panel">
+  <div class="detail-empty-state" id="detail-empty-state">항목을 선택하면<br>여기에 세부정보가 표시돼요</div>
+  <div class="detail-form" id="detail-form">
   <div class="detail-panel-header">
     <input type="text" class="detail-title-input" id="detail-title-input" placeholder="제목">
     <div class="detail-close" id="detail-close">✕</div>
@@ -1961,6 +2009,7 @@
     <div class="detail-subtask-add">
       <input type="text" id="detail-subtask-input" placeholder="항목 추가 후 Enter">
     </div>
+  </div>
   </div>
 </div>
 
@@ -2456,6 +2505,13 @@ googleSettingsToggle.addEventListener('click', ()=>{
   googleSettingsPanel.style.display = open ? 'none' : 'block';
 });
 
+// iOS에서 홈 화면에 설치한 PWA(standalone) 안에서는 구글 로그인 팝업이 아예 뜨지 않는
+// 애플 플랫폼 자체의 알려진 제약이 있음(앱 코드 문제가 아님). 이 경우엔 팝업을 시도하는 대신
+// 같은 페이지를 일반 사파리 탭에서 새로 열어 그쪽에서 로그인을 완료하도록 유도한다.
+function isStandaloneIOS(){
+  return window.navigator.standalone === true;
+}
+
 function handleGoogleConnectClick(){
   if(location.protocol === 'file:'){
     alert('이 파일을 file://로 열면 구글 로그인이 동작하지 않습니다.\n로컬 서버(예: python -m http.server)로 열어서 http://localhost 주소로 접속한 뒤 다시 시도해주세요.');
@@ -2466,10 +2522,23 @@ function handleGoogleConnectClick(){
     googleSettingsPanel.style.display = 'block';
     return;
   }
+  if(isStandaloneIOS()){
+    alert('설치된 앱에서는 iOS 제한으로 구글 로그인 창이 뜨지 않아요.\n지금 여는 사파리 탭에서 "연결하기"를 눌러 로그인을 완료해주세요. 완료 후 이 앱으로 돌아오면 자동으로 연결됩니다.');
+    window.open(location.href.split('#')[0].split('?')[0], '_blank');
+    return;
+  }
   if(!googleTokenClient) initGoogleAuth();
   if(googleTokenClient) googleTokenClient.requestAccessToken({ prompt: googleAccessToken ? '' : 'consent' });
   else alert('구글 로그인 스크립트를 아직 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
 }
+
+// 사파리 탭에서 로그인을 마치고 설치된 앱으로 돌아왔을 때, 새로고침 없이도 자동으로 연결 상태를 확인
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible' && isStandaloneIOS() && !googleAccessToken && googleConfig.wasConnected){
+    googleSilentAttempted = false;
+    if(googleTokenClient) tryAutoReconnect();
+  }
+});
 
 function handleGoogleDisconnectClick(){
   if(googleAccessToken && window.google && google.accounts && google.accounts.oauth2){
